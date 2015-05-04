@@ -3,7 +3,7 @@
 import glob, os 
 import sys
 
-#from setuptools import setup, Extension
+from setuptools import setup, Extension
 from setuptools.command import install as _install
 from numpy.distutils.core import setup, Extension # Use numpy.distutils for this, it's much more full featured
 

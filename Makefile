@@ -70,7 +70,7 @@ default:
 
 BINDIR=bin
 LIBDIR=lib
-SRCDIR=src
+SRCDIR=apexpy
 ARFLAGS = cvru
 
 all: libapex.a apex.so test
