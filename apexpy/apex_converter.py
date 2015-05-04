@@ -5,7 +5,7 @@ import os.path
 import datetime
 
 # custom
-import apex
+from apexpy import apex
 
 # 3rd-party
 import numpy
