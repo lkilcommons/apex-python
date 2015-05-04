@@ -1,0 +1,109 @@
+
+TEST 1:  Compare direct APEX model output with high spatial resolution 
+         interpolation for one time (DATE= 1994.50)
+
+Choose location above Arecibo: GLAT,GLON,ALT=   18.30  -66.75  300.00 deg, deg, km
+
+B components (N, E, down, total) from FELDG:  0.23142 -0.04439  0.25225  0.34519 Gauss
+B components (N, E, down, total) from APEX:     23142.   -4439.   25225.   34519. nT
+
+GGRID produced for NVERT=600 and limits: latitude    18.300 -    18.300
+                                        longitude   -66.750 -   -66.750
+                                         altitude   300.000 -   300.000
+         NLAT =   2  Latitudes:   18.200   18.300
+         NLON =   2 Longitudes:  -66.840  -66.720
+         NALT =   2  Altitudes:  288.591  300.214
+A, ALAT, ALON, V from APEX:    1.37  31.16   8.91 -82.03 Re, deg, deg, T-m
+A, ALAT, ALON from APXALL:     1.37  31.16   8.91
+M(110) lat, lon, v from APXMALL:     30.35   8.91 -82.03
+qsi dpl lat, lon  from APXMALL:      28.89   8.91
+B comps (N, E, down, total), sinI from APEX:       23142.   -4439.   25225.   34519. 0.731
+B comps (N, E, down, total), sinI from APXMALL:    23139.   -4437.   25227.   34519. 0.731
+Be3, sinI_m from APXMALL:                                                     33508. 0.760
+W, D, F from APXMALL: 0.7752E+03 1.0301 1.1290
+    East    North    Up
+d1  1.1118  0.1318 -0.0747
+e1  0.8783  0.1897  0.0196
+f1  0.9458  0.2241
+d2  0.1563 -0.6586 -0.6316
+e2  0.0449 -0.7981 -0.7399
+f2 -0.1376  1.1611
+d3 -0.1248  0.6507 -0.7094
+e3 -0.1324  0.6906 -0.7529
+b^ -0.1285  0.6703 -0.7308
+
+TEST 2:  Make comparison with low resolution interpolation for region over
+         Arecibo and Millstone Hill and write interpolation arrays
+
+GGRID produced for NVERT= 30 and limits: latitude   15.000 -   45.000
+                                        longitude  -75.000 -  -60.000
+                                         altitude    0.000 - 1000.000
+         NLAT =  17  Latitudes:  14.000  16.000  18.000  20.000  22.000
+                                 24.000  26.000  28.000  30.000  32.000
+                                 34.000  36.000  38.000  40.000  42.000
+                                 44.000  46.000
+         NLON =   8 Longitudes: -76.800 -74.400 -72.000 -69.600 -67.200
+                                -64.800 -62.400 -60.000
+         NALT =   6  Altitudes:   0.000 219.694 455.083 707.909 980.182
+                               1274.237
+
+Location remains above Arecibo: GLAT,GLON,ALT=   18.30  -66.75  300.00
+
+A, ALAT, ALON, V from APEX:    1.37  31.16   8.91 -82.03
+A, ALAT, ALON from APXALL:     1.37  31.16   8.91
+M(110) lat, lon, v from APXMALL:     30.34   8.91 -82.03
+qsi dpl lat, lon  from APXMALL:      28.89   8.91
+B comps (N, E, down, total), sinI from APEX:      23142.   -4439.   25225.   34519. 0.731
+B comps (N, E, down, total), sinI from APXMALL:   23205.   -4541.   25212.   34565. 0.729
+
+TEST 3:  Read back arrays stored in Arecibo_and_Millstone_Hill-1994.5
+
+
+Location is now above Millstone: GLAT,GLON,ALT=   42.60  -71.50 1000.00
+
+A, ALAT, ALON, V from APEX:    3.18  55.92   5.11 -114.70
+A, ALAT, ALON from APXALL:     3.18  55.92   5.10
+
+B components (N, E, down, total) from FELDG:    0.11841 -0.02614  0.32155  0.34365
+B comps (N, E, down, total), sinI from APXMALL:   11830.   -2653.   32109.   34321. 0.936
+
+Test 4:  Use APXQ2G to get geographic coordinates given quasi-dipole coordinates
+         then reverse the calculation by calling APXMALL
+
+Choose quasi-dipole coordinates:           QDLAT,QDLON,ALT=  45.00   2.00 110.00
+APXQ2G returned geographic coordinates:    GDLAT,GDLON    =  34.05 -73.68
+Input GDLAT,GDLON,ALT and APXMALL returns: QDLAT,QDLON,ALT=  45.00   2.00 110.00
+
+TEST 5: Interpolate in time too by first setting up arrays for dates: 
+        1965.000 1970.000 1975.000 1980.000 1985.000
+        1990.000 1995.000 2000.000
+
+Stored arrays in file "Arecibo_and_Millstone_Hill-1965.2000"
+Retrieving arrays, interpolating in time to 1994.500 (call APXRDA)
+Location is again above Millstone: GLAT,GLON,ALT   42.60  -71.50 1000.00
+A, ALAT, ALON from APXALL:     3.18  55.92   5.11
+
+TEST 6: Use related routines SUBSOL, MAGLOCTM and MLT2ALON to obtain the
+        subsolar point, use it to get magnetic local time and solar zenith
+        angle, then convert magnetic local time back to APEX longitude
+
+First call COFRM and reestablish DATE =  1994.500 (The previous APXWRA call
+set the date of the IGRF coefficients at 2000.000).  MAGLOCTM and MLT2ALON inputs
+include the magnetic dipole location, which is obtained calling DYPOL:
+COLAT,ELON,VP=  10.6953 -71.3868 192.5719 deg, deg, T-m
+
+SUBSOL inputs: IYR,IDAY,IHR,IMN,SEC = 1994  182   12    0   0. UT
+SUBSOL returns: SBSLLAT,SBSLLON =   23.11    0.95 deg
+
+Using this subsolar point and the location above Millstone Hill,
+COSSZA returns solar zenith angle =   61.98 degrees
+
+Using this subsolar point, MAGLOCTM returns:  XMLT =  7.203 hours
+Using this subsolar point and XMLT, MLT2ALON returns   5.11 deg
+In comparision, APXALL originally returned:  ALON =    5.11 deg
+
+Test 7:  Demonstrate response to inputting location outside array boundaries
+
+Location is in southern hemisphere: GLAT,GLON,ALT  -42.60  -71.50 1000.00
+APXALL:  Latitude out of range; GPLAT(1),GLAT,GPLAT(NLAT)=    14.000   -42.600    46.000
+APXALL returns A,ALAT,ALON,IST= -32767.00 -32767.00 -32767.00   1
