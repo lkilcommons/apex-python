@@ -21,7 +21,7 @@ From the directory in which you have cloned the repo, issue:
 `python setup.py install`  
 
 # Original README 
-
+```
 NAME
     Apex Coordinate System Transformations
 
@@ -174,3 +174,4 @@ COPYRIGHT AND LICENSE
 
 SEMANTIC VERSIONING
     This is versioned in accordance with semantic versioning  <http://semver.org/>.
+```
