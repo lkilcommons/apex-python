@@ -1,24 +1,23 @@
-# Apex-Python
+# Apexpy
 This is a set of python convenience tools that wrap Art Richmonds original Apex Fortran codes.
 
-The F2Py extension bindings of the original tools is a apex-python.apex. This portion was
+The F2Py extension bindings of the original tools is a apexpy.apex. This portion was
 written by Peter Schmitt, formerly of NCAR High Altitude Observatory.
 
 Liam Kilcommons (University of Colorado, Aerospace Engineering Sciences), took over this
-project and extended Peter's port with the apex-converter class (apex-python.apex-converter).
+project and extended Peter's port with the apex-converter class (apexpy.apex_converter).
 This class simplify processing large amounts of spacecraft data by providing simplified interface
 to the apex routines, along with convenience routines for converting from Apex Longitude to Magnetic Local Time,
 finding the subsolar point, etc.
-
-A full tutorial on its use can be found in the apex_converter_demo.pdf.
 
 No modifications other than those in the following original README
 have been made.
 
 # Installation
-You must have gfortran installed. Apex-converter requires numpy, and matplotlib.
+You must have gfortran installed. Apex_converter requires numpy.
 From the directory in which you have cloned the repo, issue:
-`python setup.py install`  
+`python setup.py install`
+
 
 # Original README 
 ```
