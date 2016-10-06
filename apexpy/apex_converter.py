@@ -14,7 +14,6 @@ import numpy
 
 class apex_converter:
 
-
 	def __init__(self,glatmin=-90.,glatmax=90.,glonmin=-180.,glonmax=180.,altmin=300., altmax=900.,
 		nvert=50.,epoch=2010.0):
 		"""	
@@ -121,7 +120,7 @@ class apex_converter:
 		self.nlon = min([self.nlon,5*nvert+1.])
 		self.nalt = numpy.ceil(ihtmx - ihtmn + 1.)
 
-		self.workArray = numpy.empty(self.nlat*self.nlon*self.nalt*6, numpy.float32)
+		self.workArray = numpy.empty(int(self.nlat)*int(self.nlon)*int(self.nalt)*6, numpy.float32)
 		# Define grid points suitable for preparing interpolation
 		# tables for Apex coordinates, Modified Apex Coordinates and
 		# Quasi-Dipole coordinates
@@ -172,7 +171,7 @@ class apex_converter:
 
 	def solarParams(self,year,dayofyear,utseconds):
 		"""
-		Gets the geographic latitude and logitude of the 
+		Gets the geographic latitude and longitude of the 
 		northern geomagnetic pole and the subsolar point(s)
 		for a particular year and day of year.
 
@@ -234,6 +233,86 @@ class apex_converter:
 
 		return sbsllat,sbsllon,nplat,nplon
 
+	def mlt2alon(self,mlt,year,dayofyear,utseconds):
+		"""
+		Converts Magnetic Local Time to Apex Longitudes
+
+		Calls apex subroutine apex.mlt2alon (mag local time) 
+		after setting the IGRF coefficient global variables using
+		the same epoch as was used to initially 
+		generate the interpolation tables. 
+		
+		Parameters
+		----------
+		mlt : numpy.array
+			a numpy array of length n, apex longitude
+		year : int or numpy.array
+			The year for which to compute the MLT
+		dayofyear : int or numpy.array
+			The day-of-year(s) for which MLT is to be found
+		utseconds : int or numpy.array 
+			the second-of-the-day(s) in UT
+			of the time for which the MLT is to be found
+		
+		Options for time argument (year,dayofyear,utseconds) length:
+		1. All have length 1 for MLT of all alons for a fixed time.
+		2. Year,and Day of year can have length 1, 
+			and then UT seconds can have length n 
+		 	for different times on same day
+		3. All can have length n to find the MLT 
+			of each alon with a unique date and time 
+			year is year(s) for which MLT is to be found.
+
+		Returns
+		-------
+		mlt : numpy.array
+			The magnetic local time corresponding to alon for
+			the times specified
+		"""
+		#Make sure everything that is supposed to be an array is one
+		#Had to do this to make sure everything has a length, since we check that later
+		if not isinstance(mlt,numpy.ndarray):
+			mlt = numpy.array(mlt)
+		if not isinstance(year,numpy.ndarray):
+			year = numpy.array(year)
+		if not isinstance(dayofyear,numpy.ndarray):
+			dayofyear = numpy.array(dayofyear)
+		if not isinstance(utseconds,numpy.ndarray):
+			utseconds = numpy.array(utseconds)
+		
+		print "Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) )
+		hour = numpy.floor(utseconds/3600)
+		minute = numpy.floor((utseconds - hour*3600)/60)
+		second = utseconds - hour*3600. - minute*60.
+
+		#Set IGRF coeffcients to current epoch
+		apex.cofrm(self.epoch)
+		clatp,polon,vp = apex.dypol()
+		if year.size==1 and dayofyear.size==1 and utseconds.size==1: 
+			sbsllat1,sbsllon1 = apex.subsol(year,dayofyear,hour,minute,second)
+			sbsllat = numpy.ones_like(mlt)*sbsllat1
+			sbsllon = numpy.ones_like(mlt)*sbsllon1
+		elif year.size==mlt.size and dayofyear.size==mlt.size and utseconds.size==mlt.size:
+			sbsllat = numpy.zeros_like(mlt)
+			sbsllon = numpy.zeros_like(mlt)
+			for k,lon in enumerate(mlt):
+				sbsllat[k],sbsllon[k] = apex.subsol(year[k],dayofyear[k],hour[k],minute[k],second[k])
+		elif year.size==1 and dayofyear.size==1 and utseconds.size==mlt.size:
+			sbsllat = numpy.zeros_like(mlt)
+			sbsllon = numpy.zeros_like(mlt)
+			for k,lon in enumerate(mlt):
+				sbsllat[k],sbsllon[k] = apex.subsol(year,dayofyear,hour[k],minute[k],second[k])
+		else:
+			raise ValueError("Length of time arguments must either be 1 or equal to length of longitude argument!\nyear.size=%d\ndayofyear.size=%d\nutseconds.size=%d" % (year.size,dayofyear.size,utseconds.size))
+		alon = numpy.zeros_like(mlt)
+		for k in xrange(len(mlt)):
+			#Call signitude subroutine mlt2alon(xmlt,sbsllat,sbsllon,clatp,polon,alonx)
+			alon[k] = apex.mlt2alon(mlt[k],sbsllat[k],sbsllon[k],clatp,polon)
+		#Sanity check magnetic local time
+		alon[alon<0] = alon[alon<0]+360.
+		alon[alon>360.] = numpy.mod(alon[alon>360.],360.)
+		return alon
+
 	def alon2mlt(self,alon,year,dayofyear,utseconds):
 		"""
 		Converts Apex Longitudes to Magnetic Local Time
@@ -284,7 +363,7 @@ class apex_converter:
 		print "Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) )
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
-		second = utseconds - hour*3600 - minute*60
+		second = utseconds - hour*3600. - minute*60.
 
 		epoch = self.epoch
 		#Set IGRF coeffcients to current epoch
@@ -595,9 +674,7 @@ class apex_converter:
 		v_d1 = numpy.zeros_like(lat)
 		v_d2 = numpy.zeros_like(lat)
 		v_d3 = numpy.zeros_like(lat)
-
-		#inner is inner product
-		#Made this a loop because inner was giving memory error
+		
 		for c in numpy.arange(len(v[:,0])):
 			v_d1[c] = numpy.dot(v[c,:],e1[c,:])
 			v_d2[c] = numpy.dot(v[c,:],e2[c,:])
