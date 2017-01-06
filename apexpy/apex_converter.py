@@ -630,6 +630,48 @@ class apex_converter:
 		
 		return alat,alon,qdlat
 
+	def apex2geo(self,alat,alon,alt,hr=110.):
+		"""
+		Does a simple transformation of observation positions from modified apex to geodetic
+		
+		Parameters
+		----------
+		alat : numpy.array 
+			Modified Apex latitudes
+		alon : numpy.array 
+			Modified Apex longitudes
+		alt : numpy.array 
+			Altitude to get coordinates for in km
+		hr=110. : float
+			Modified Apex reference height in km
+
+		Returns
+		-------
+		glat : numpy.array
+			Modified Apex Latitude
+		glon : numpy.array
+			Apex Longitude
+		"""
+		gdlats,gdlons = numpy.zeros_like(alat),numpy.zeros_like(alon)
+		try:
+			n_alts = len(alt)
+		except:
+			n_alts = 1
+
+		if n_alts == 1:
+			alt = numpy.ones_like(alat)*alt
+
+		for i in range(len(alat)):
+			(this_gdlat, this_gdlon, this_ist) = apex.apxm2g(xlatm=alat[i],
+	                                          alon=alon[i],
+	                                          alt=alt[i],
+	                                          hr=hr,
+	                                          wk=self.workArray,
+	                                          lwk=len(self.workArray))
+			gdlats[i],gdlons[i] = this_gdlat,this_gdlon
+
+		return gdlats,gdlons
+
 	def measurement2apex(self,lat,lon,alt,v,hr=110.):
 		#import pdb
 		"""
