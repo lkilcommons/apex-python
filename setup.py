@@ -17,7 +17,8 @@ sources_f = glob.glob('apexpy/*.f')
 #includes multiple copies of apex-f2pywrappers.o in the linking
 #step if you don't remove it from the sources list, it must
 #get automatically pulled in by including apex.pyf or something
-sources_f.remove('apexpy/apex-f2pywrappers.f')
+#if 'apexpy/apex-f2pywrappers.f' in sources_f:
+#	sources_f.remove('apexpy/apex-f2pywrappers.f')
 
 apex = Extension(name = 'apexpy.apex',
                  sources = ['apexpy/apex.pyf','apexpy/apxntrp.f90'] + sources_f,
