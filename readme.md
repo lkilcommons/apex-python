@@ -1,7 +1,7 @@
 # Apexpy
 
-## What is this
-This code is a python wrapper around Art Richmond's original Modified Magnetic Apex coordinate system Fortran library. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models). 
+## What is this?
+This code is a python wrapper around Art Richmond's original Modified Magnetic Apex magnetic coordinate system, as implemented in legacy Fortran. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models). 
 
 I've written a Python class called apex_converter, which expands upon the basic functionality in the Fortran library in several ways:
 
