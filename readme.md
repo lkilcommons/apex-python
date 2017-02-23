@@ -4,8 +4,9 @@
 This code is a python wrapper around Art Richmond's original Modified Magnetic Apex coordinate system Fortran library. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models). 
 
 I've written a Python class called apex_converter, which expands upon the basic functionality in the Fortran library in several ways:
-1) Vectorization - all of the functions in the apex_coverter class are equipped to handle numpy arrays
-2) Result Caching - after a large call to the fortran library has completed, the results for ALL variables, not just the ones the user requested, are stored in a dictionary (called last_run).
+
+1. Vectorization - all of the functions in the apex_coverter class are equipped to handle numpy arrays
+2. Result Caching - after a large call to the fortran library has completed, the results for ALL variables, not just the ones the user requested, are stored in a dictionary (called last_run).
 
 
 ## Installation
