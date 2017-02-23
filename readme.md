@@ -1,15 +1,28 @@
 # Apexpy
 
 # Installation
-You must have gfortran installed. Apex_converter requires numpy.
+Tested using the Anaconda Python distribution on Ubuntu 14.04.
+Also have tested using OSX system python in a Python virualenv.
+If you test in windows and find problems, file an issue in the issue tracker and I'll work on it.
+
+Currently only Python 2.7 is supported. Working on Python 3 support.
+
+Dependanices:
+- numpy
+- gfortran (for f2py wrapper)
+
+Optional Libraries:
+- matplotlib
+- [geospacepy-lite](https://bitbucket.org/amienext/geospacepy-lite)
 
 From the directory in which you have cloned the repo, issue:
 `python setup.py install`
 
 # Usage
 
-See apex_converter_demo Jupyter notebook for basic usage
-Some later example in the notebook require [geospacepy](https://bitbucket.org/amienext/geospacepy-lite) for special plot types
+See apex_converter_demo Jupyter notebook for basic usage.
+
+Some later example in the notebook require [geospacepy-lite](https://bitbucket.org/amienext/geospacepy-lite) for special plot types
 
 # References
     Richmond, A. D., Ionospheric Electrodynamics Using Magnetic Apex
