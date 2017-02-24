@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ApexPy &#8212; ApexPy 1.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">ApexPy 1.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="apexpy">
+<h1>ApexPy<a class="headerlink" href="#apexpy" title="Permalink to this headline">¶</a></h1>
+<p>This is a start on documentation for the ApexPy code.</p>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="apexpy.apex_converter.apex_converter">
+<em class="property">class </em><code class="descclassname">apexpy.apex_converter.</code><code class="descname">apex_converter</code><span class="sig-paren">(</span><em>glatmin=-90.0</em>, <em>glatmax=90.0</em>, <em>glonmin=-180.0</em>, <em>glonmax=180.0</em>, <em>altmin=300.0</em>, <em>altmax=900.0</em>, <em>nvert=50.0</em>, <em>epoch=2010.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bulk conversion of geographic coordinates to Modified Apex</p>
+<p>Parameters described are for class constructor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>glatmin</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: minimum geographic latitude (default=-90.)</li>
+<li><strong>glatmax</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: maximum geographic latitude (default=-90.)</li>
+<li><strong>glonmin</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: minimum geographic longitude (default=-180.)</li>
+<li><strong>glonmax</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: maximum geographic longitude (default=180.)</li>
+<li><strong>altmin</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: minimum altitude in km (default=300.)</li>
+<li><strong>altmax</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid boundary: minimum altitude in km (default=900.)</li>
+<li><strong>nvert</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Grid spacing factor. Determines vertical and lat,lon resolution.
+Recommended values are between 30 and 100. (default=50.)</li>
+<li><strong>epoch</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Epoch for input into IGRF; the year</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>Altitude is in km</li>
+<li>Latitude and longitude are in degrees. Negative longitude instead of lon&gt;180.</li>
+<li>nvert is the grid spacing factor. Recommended values are between 30 and 100.</li>
+<li>Larger values of nvert will cause the program to use more memory</li>
+<li>Unterpolation accuracy will increase up to about nvert of 100. See ggrid.f for more information.</li>
+</ul>
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.alon2mlt">
+<code class="descname">alon2mlt</code><span class="sig-paren">(</span><em>alon</em>, <em>year</em>, <em>dayofyear</em>, <em>utseconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.alon2mlt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.alon2mlt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Apex Longitudes to Magnetic Local Time</p>
+<p>Calls apex subroutine apex.magloctm (mag local time)
+after setting the IGRF coefficient global variables using
+the same epoch as was used to initially
+generate the interpolation tables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>alon</strong> (<em>numpy.array</em>) &#8211; a numpy array of length n, apex longitude</li>
+<li><strong>year</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; The year for which to compute the MLT</li>
+<li><strong>dayofyear</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; The day-of-year(s) for which MLT is to be found</li>
+<li><strong>utseconds</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; the second-of-the-day(s) in UT
+of the time for which the MLT is to be found</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mlt</strong> &#8211; The magnetic local time corresponding to alon for
+the times specified</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Options for time argument (year,dayofyear,utseconds) length</p>
+<ol class="arabic simple">
+<li>All have length 1 for MLT of all alons for a fixed time.</li>
+<li>Year,and Day of year can have length 1, and then UT seconds can have length n for different times on same day</li>
+<li>All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.apex2geo">
+<code class="descname">apex2geo</code><span class="sig-paren">(</span><em>alat</em>, <em>alon</em>, <em>alt</em>, <em>hr=110.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.apex2geo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.apex2geo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a simple transformation of observation positions from modified apex to geodetic</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>alat</strong> (<em>numpy.array</em>) &#8211; Modified Apex latitudes</li>
+<li><strong>alon</strong> (<em>numpy.array</em>) &#8211; Modified Apex longitudes</li>
+<li><strong>alt</strong> (<em>numpy.array</em>) &#8211; Altitude to get coordinates for in km</li>
+<li><strong>hr=110.</strong> (<em>float</em>) &#8211; Modified Apex reference height in km</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>gdlat</strong> (<em>numpy.array</em>) &#8211; Geodetic Latitude</li>
+<li><strong>gdlon</strong> (<em>numpy.array</em>) &#8211; Geodetic Longitude</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.geo2apex">
+<code class="descname">geo2apex</code><span class="sig-paren">(</span><em>lat</em>, <em>lon</em>, <em>alt</em>, <em>hr=110.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.geo2apex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.geo2apex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a simple transformation of observation positions from geographic to apex</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lat</strong> (<em>numpy.array</em>) &#8211; Observation Geographic latitudes</li>
+<li><strong>lon</strong> (<em>numpy.array</em>) &#8211; Observation Geographic longitudes</li>
+<li><strong>alt</strong> (<em>numpy.array</em>) &#8211; Observation Altitudes in km</li>
+<li><strong>hr=110.</strong> (<em>float</em>) &#8211; Modified Apex reference height in km</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>alat</strong> (<em>numpy.array</em>) &#8211; Modified Apex Latitude</li>
+<li><strong>alon</strong> (<em>numpy.array</em>) &#8211; Apex Longitude</li>
+<li><strong>qdlat</strong> (<em>numpy.array</em>) &#8211; Quasi-Dipole Latitude</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.getTransformationResults">
+<code class="descname">getTransformationResults</code><span class="sig-paren">(</span><em>lat</em>, <em>lon</em>, <em>alt</em>, <em>hr=110.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.getTransformationResults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.getTransformationResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a set of points to Apex, also saves the results from APXMALL
+into a class parameter so they can be reused.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lat</strong> (<em>numpy.array</em>) &#8211; Geographic latitude in degrees with N positive (length n)</li>
+<li><strong>lon</strong> (<em>numpy.array</em>) &#8211; Geographic longitude in degress with E positive (length n)</li>
+<li><strong>alt</strong> (<em>numpy.array</em>) &#8211; Altitude of measurement in km (length n)</li>
+<li><strong>hr</strong> (<em>float</em>) &#8211; Modified Apex reference altitude in km (see Richmond,1995 for description of coordinates)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Saves the following variables to the dictionary self.lastrun.
+All values are numpy arrays of dimensions [n,1], [n,2] or [n,3].</p>
+<ul class="simple">
+<li>b - magnetic field components (east, north, up), in nT</li>
+<li>bhat - components (east, north, up) of unit vector along the geomagnetic field direction</li>
+<li>bmag - magnetic field magnitude, nT</li>
+<li>si - sin(I) where I is the angle of inclination of the field line below the horizontal</li>
+<li>alon - Apex longitude = Modified Apex longitude = Quasi-Dipole longitude, degrees</li>
+<li>xlatm - Modified Apex latitude, degrees</li>
+<li>vmp - magnetic potential, in T.m</li>
+<li>wm - Wm of reference above, in km**2 /nT; i.e., 10**15 m**2 /T)</li>
+<li>d - D of reference above</li>
+<li>be3 - B_e3 of reference above (= Bmag/D), in nT</li>
+<li>sim - sin(I_m) of reference above</li>
+<li>d1,d2,d3,e1,e2,e3 - Modified Apex coordinates base vectors, each with three components (east, north, up) as described in reference above</li>
+<li>xlatqd - Quasi-Dipole latitude, degrees</li>
+<li>f - F for Quasi-Dipole coordinates described in reference above</li>
+<li>f1,f2 - Quasi-Dipole coordinates base vectors with components (east, north) described in reference above</li>
+<li>ist - Return status: 0 (okay) or 1 (failed).</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.identicalInputs">
+<code class="descname">identicalInputs</code><span class="sig-paren">(</span><em>lat</em>, <em>lon</em>, <em>alt</em>, <em>hr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.identicalInputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.identicalInputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if the self.lastrun represents the results obtained by transforming inputs time,lat,lon,alt,hr</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.measurement2apex">
+<code class="descname">measurement2apex</code><span class="sig-paren">(</span><em>lat</em>, <em>lon</em>, <em>alt</em>, <em>v</em>, <em>hr=110.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.measurement2apex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.measurement2apex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a vector measurement and it&#8217;s associated location to modified apex coordinates</p>
+<p>Transforms measurement vector v [m x 3] in geo east, north, up
+to apex. Lat, lon, and alt are [m x 1] vectors of locations association with
+Measurements in vector v, hr is reference height</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lat</strong> (<em>numpy.array</em>) &#8211; geographic latitude</li>
+<li><strong>lon</strong> (<em>numpy.array</em>) &#8211; geographic longitude</li>
+<li><strong>alt</strong> (<em>numpy.array</em>) &#8211; geographic altitude</li>
+<li><strong>v</strong> (<em>numpy.array</em>) &#8211; [nx3] vector to transform</li>
+<li><strong>hr</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; Apex reference height in km (default=110.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>alat</strong> (<em>numpy.array</em>) &#8211; Modified Apex Latitude of measurement</li>
+<li><strong>alon</strong> (<em>numpy.array</em>) &#8211; Apex Longitude of measurement</li>
+<li><strong>v_d</strong> (<em>numpy.array</em>) &#8211; Vector in Apex &#8216;d&#8217; basis</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.mlt2alon">
+<code class="descname">mlt2alon</code><span class="sig-paren">(</span><em>mlt</em>, <em>year</em>, <em>dayofyear</em>, <em>utseconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.mlt2alon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.mlt2alon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Magnetic Local Time to Apex Longitudes</p>
+<p>Calls apex subroutine apex.mlt2alon (mag local time)
+after setting the IGRF coefficient global variables using
+the same epoch as was used to initially
+generate the interpolation tables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mlt</strong> (<em>numpy.array</em>) &#8211; a numpy array of length n, apex longitude</li>
+<li><strong>year</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; The year for which to compute the MLT</li>
+<li><strong>dayofyear</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; The day-of-year(s) for which MLT is to be found</li>
+<li><strong>utseconds</strong> (<em>int</em><em> or </em><em>numpy.array</em>) &#8211; the second-of-the-day(s) in UT
+of the time for which the MLT is to be found</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mlt</strong> &#8211; The magnetic local time corresponding to alon for
+the times specified</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Options for time argument (year,dayofyear,utseconds) length</p>
+<ol class="arabic simple">
+<li>All have length 1 for MLT of all alons for a fixed time.</li>
+<li>Year,and Day of year can have length 1,and then UT seconds can have length n for different times on same day</li>
+<li>All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="apexpy.apex_converter.apex_converter.solarParams">
+<code class="descname">solarParams</code><span class="sig-paren">(</span><em>year</em>, <em>dayofyear</em>, <em>utseconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/apexpy/apex_converter.html#apex_converter.solarParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#apexpy.apex_converter.apex_converter.solarParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the geographic latitude and longitude of the
+northern geomagnetic pole and the subsolar point(s)
+for a particular year and day of year.</p>
+<p>Note that the geomagnetic north pole coordinate returned
+are determined by the epoch setting of this apex_converter
+instance and not explicitly by the year/day-of-year argument.
+If you are not using a year/day-of-year that agrees
+with the epoch setting (self.epoch), you&#8217;ll get incorrect
+results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>year</strong> (<em>int</em><em> or </em><em>numpy.array</em><em>, </em><em>length 1</em>) &#8211; The year for which to get the subsolar point(s)</li>
+<li><strong>dayofyear</strong> (<em>int</em><em> or </em><em>numpy.array</em><em>, </em><em>length 1</em>) &#8211; The day of the year for which to get the subsolar point(s)</li>
+<li><strong>utseconds</strong> (<em>numpy.array</em>) &#8211; The Universal Time second of the day for which
+to obtain the subsolar points.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>subsllat</strong> (<em>numpy.array len(utseconds)</em>) &#8211; geographic latitude(s) of subsolar point</li>
+<li><strong>subsllon</strong> (<em>numpy.array len(utseconds)</em>) &#8211; geographic lons(s) of subsolar point</li>
+<li><strong>nplat</strong> (<em>numpy.array len(1)</em>) &#8211; north geographic latitude of magnetic north pole</li>
+<li><strong>nplon</strong> (<em>numpy.array len(1)</em>) &#8211; east geographic longitude of magnetic north pole</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">ApexPy</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="#">ApexPy 1.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Liam Kilcommons.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.
+    </div>
+  </body>
+</html>

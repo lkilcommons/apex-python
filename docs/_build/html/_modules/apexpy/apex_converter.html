@@ -1,0 +1,814 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>apexpy.apex_converter &#8212; ApexPy 1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ApexPy 1.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for apexpy.apex_converter</h1><div class="highlight"><pre>
+<span></span>
+<span class="c1">#builtin</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="c1"># custom</span>
+<span class="kn">from</span> <span class="nn">apexpy</span> <span class="k">import</span> <span class="n">apex</span>
+
+<span class="c1"># 3rd-party</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="c1">#import matplotlib.pyplot as pp</span>
+<span class="c1">#import matplotlib as mpl</span>
+
+<div class="viewcode-block" id="apex_converter"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter">[docs]</a><span class="k">class</span> <span class="nc">apex_converter</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot;	</span>
+<span class="sd">	Bulk conversion of geographic coordinates to Modified Apex</span>
+
+<span class="sd">	Parameters described are for class constructor</span>
+
+<span class="sd">	Parameters</span>
+<span class="sd">	----------	</span>
+<span class="sd">	glatmin : float, optional</span>
+<span class="sd">		Grid boundary: minimum geographic latitude (default=-90.)</span>
+<span class="sd">	glatmax : float, optional</span>
+<span class="sd">		Grid boundary: maximum geographic latitude (default=-90.)</span>
+<span class="sd">	glonmin : float, optional</span>
+<span class="sd">		Grid boundary: minimum geographic longitude (default=-180.)</span>
+<span class="sd">	glonmax : float, optional</span>
+<span class="sd">		Grid boundary: maximum geographic longitude (default=180.)</span>
+<span class="sd">	altmin : float, optional</span>
+<span class="sd">		Grid boundary: minimum altitude in km (default=300.)</span>
+<span class="sd">	altmax : float, optional</span>
+<span class="sd">		Grid boundary: minimum altitude in km (default=900.)</span>
+<span class="sd">	nvert : float, optional</span>
+<span class="sd">		Grid spacing factor. Determines vertical and lat,lon resolution.</span>
+<span class="sd">		Recommended values are between 30 and 100. (default=50.)</span>
+<span class="sd">	epoch : float, optional</span>
+<span class="sd">		Epoch for input into IGRF; the year </span>
+<span class="sd">	</span>
+<span class="sd">	Notes</span>
+<span class="sd">	-----	</span>
+<span class="sd">		* Altitude is in km</span>
+<span class="sd">		* Latitude and longitude are in degrees. Negative longitude instead of lon&gt;180.</span>
+<span class="sd">		* nvert is the grid spacing factor. Recommended values are between 30 and 100. </span>
+<span class="sd">		* Larger values of nvert will cause the program to use more memory</span>
+<span class="sd">		* Unterpolation accuracy will increase up to about nvert of 100. See ggrid.f for more information.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">glatmin</span><span class="o">=-</span><span class="mf">90.</span><span class="p">,</span><span class="n">glatmax</span><span class="o">=</span><span class="mf">90.</span><span class="p">,</span><span class="n">glonmin</span><span class="o">=-</span><span class="mf">180.</span><span class="p">,</span><span class="n">glonmax</span><span class="o">=</span><span class="mf">180.</span><span class="p">,</span><span class="n">altmin</span><span class="o">=</span><span class="mf">300.</span><span class="p">,</span> <span class="n">altmax</span><span class="o">=</span><span class="mf">900.</span><span class="p">,</span>
+		<span class="n">nvert</span><span class="o">=</span><span class="mf">50.</span><span class="p">,</span><span class="n">epoch</span><span class="o">=</span><span class="mf">2010.0</span><span class="p">):</span>
+		<span class="c1">#Much of the following code is ripped out of test_apxntrp, written by Peter Schmidt at NCAR HAO</span>
+
+		<span class="c1"># due to a shortcoming in f2py (documented here http://cens.ioc.ee/pipermail/f2py-users/2008-December/001764.html), </span>
+		<span class="c1"># we must know dimensions apriori.   </span>
+		
+		<span class="c1">#Code to figure out what nlat, nlon and nalt are from the nvert spacing factor. Translated from fortran code below:</span>
+		<span class="c1">#Code from ggrid.f:</span>
+		<span class="c1">#DNV  = DBLE (NVERT)</span>
+		<span class="c1">#DLON = 360.D0 / (5.D0*DNV)</span>
+		<span class="c1">#DLAT = 180.D0 / (3.D0*DNV)</span>
+		<span class="c1">#DIHT = 1.D0 / DNV</span>
+		<span class="c1">#</span>
+		<span class="c1">#LAMN =  MAX0 (INT((DBLE(GLAMN) +90.D0 )/DLAT)     , 0)</span>
+		<span class="c1">#LAMX =  MIN0 (INT((DBLE(GLAMX) +90.D0 )/DLAT+1.D0), 3*NVERT)</span>
+		<span class="c1">#</span>
+		<span class="c1">#LOMN  = MAX0 (INT((DBLE(GLOMN) +180.D0)/DLON)  , 0)</span>
+		<span class="c1">#GLOMXL= AMIN1 (GLOMX,GLOMN+360.)</span>
+		<span class="c1">#LOMX  = MIN0 (INT((DBLE(GLOMXL)+180.D0)/DLON+1.D0),10*NVERT)</span>
+		<span class="c1">#</span>
+		<span class="c1">#X = RE/(RE+ALTMX)/DIHT - 1.E-5</span>
+		<span class="c1">#IHTMN = AMAX1 (X,1.)</span>
+		<span class="c1">#IHTMN = MIN0 (IHTMN,NVERT-1)</span>
+		<span class="c1">#X = RE/(RE+ALTMN)/DIHT + 1.E-5</span>
+		<span class="c1">#I = X + 1.</span>
+		<span class="c1">#IHTMX = MIN0(I, NVERT)</span>
+		<span class="c1">#</span>
+		<span class="c1">#NLAT = LAMX - LAMN + 1</span>
+		<span class="c1">#NLON = LOMX - LOMN + 1</span>
+		<span class="c1">#NLON = MIN0 (NLON,5*NVERT+1)</span>
+		<span class="c1">#NALT = IHTMX - IHTMN + 1</span>
+		
+		<span class="c1">#Set local variables to their attribute counterparts</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">glatmin</span> <span class="o">=</span> <span class="n">glatmin</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">glatmax</span> <span class="o">=</span> <span class="n">glatmax</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">glonmin</span> <span class="o">=</span> <span class="n">glonmin</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">altmin</span> <span class="o">=</span> <span class="n">altmin</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">altmax</span> <span class="o">=</span> <span class="n">altmax</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">nvert</span> <span class="o">=</span> <span class="n">nvert</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+
+		<span class="n">re</span> <span class="o">=</span> <span class="mf">6371.2</span>
+		<span class="n">dlon</span> <span class="o">=</span> <span class="mf">360.</span><span class="o">/</span><span class="p">(</span><span class="mf">5.</span><span class="o">*</span><span class="n">nvert</span><span class="p">)</span>
+		<span class="n">dlat</span> <span class="o">=</span> <span class="mf">180.</span><span class="o">/</span><span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="n">nvert</span><span class="p">)</span>
+		<span class="n">diht</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">nvert</span>
+
+		<span class="n">lamn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([(</span><span class="n">glatmin</span><span class="o">+</span><span class="mi">90</span><span class="p">)</span><span class="o">/</span><span class="n">dlat</span><span class="p">,</span><span class="mf">0.</span><span class="p">])</span>
+		<span class="n">lamx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([(</span><span class="n">glatmax</span><span class="o">+</span><span class="mi">90</span><span class="p">)</span><span class="o">/</span><span class="n">dlat</span><span class="o">+</span><span class="mf">1.</span><span class="p">,</span><span class="mf">3.</span><span class="o">*</span><span class="n">nvert</span><span class="p">])</span>
+
+		<span class="n">lomn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([(</span><span class="n">glonmin</span><span class="o">+</span><span class="mf">180.</span><span class="p">)</span><span class="o">/</span><span class="n">dlon</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+		<span class="n">glomxl</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">glonmax</span><span class="p">,</span><span class="n">glonmin</span><span class="o">+</span><span class="mf">360.</span><span class="p">])</span>
+		<span class="n">lomx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([(</span><span class="n">glonmax</span><span class="o">+</span><span class="mf">180.</span><span class="p">)</span><span class="o">/</span><span class="n">dlon</span><span class="o">+</span><span class="mf">1.</span><span class="p">,</span><span class="mi">10</span><span class="o">*</span><span class="n">nvert</span><span class="p">])</span>
+		
+		<span class="n">x1</span> <span class="o">=</span> <span class="n">re</span><span class="o">/</span><span class="p">(</span><span class="n">re</span><span class="o">+</span><span class="n">altmax</span><span class="p">)</span><span class="o">/</span><span class="n">diht</span> <span class="o">-</span> <span class="mf">1.0e-5</span>
+		<span class="n">ihtmn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span><span class="mf">1.</span><span class="p">])</span>
+		<span class="n">ihtmn</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">ihtmn</span><span class="p">,</span><span class="n">nvert</span><span class="o">-</span><span class="mf">1.</span><span class="p">])</span>
+		<span class="n">x2</span> <span class="o">=</span> <span class="n">re</span><span class="o">/</span><span class="p">(</span><span class="n">re</span><span class="o">+</span><span class="n">altmin</span><span class="p">)</span><span class="o">/</span><span class="n">diht</span> <span class="o">+</span> <span class="mf">1.0e-5</span>
+		<span class="n">I</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">+</span> <span class="mf">1.</span>	 
+		<span class="n">ihtmx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">I</span><span class="p">,</span><span class="n">nvert</span><span class="p">])</span>
+
+		<span class="c1">#print &quot;debug:\n&quot;</span>
+		<span class="c1">#print &quot;lamn,lamx = %f,%f&quot; % (lamn,lamx)</span>
+		<span class="c1">#print &quot;lomn,lomx = %f,%f&quot; % (lomn,lomx)</span>
+		<span class="c1">#print &quot;ihtmn,ihtmx = %f,%f&quot; % (ihtmn,ihtmx)</span>
+
+		<span class="c1">#Use floor to make sure we have an integer number of points in the array</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">nlat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">lamx</span> <span class="o">-</span> <span class="n">lamn</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">lomx</span> <span class="o">-</span> <span class="n">lomn</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">nlon</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">,</span><span class="mi">5</span><span class="o">*</span><span class="n">nvert</span><span class="o">+</span><span class="mf">1.</span><span class="p">])</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">nalt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ihtmx</span> <span class="o">-</span> <span class="n">ihtmn</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">workArray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nlat</span><span class="p">)</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">)</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nalt</span><span class="p">)</span><span class="o">*</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+		<span class="c1"># Define grid points suitable for preparing interpolation</span>
+		<span class="c1"># tables for Apex coordinates, Modified Apex Coordinates and</span>
+		<span class="c1"># Quasi-Dipole coordinates</span>
+		<span class="c1"># LMK - nvert = 40 was setting used in Tomoko Matsuo&#39;s get_apexB_mod.f fortran code, which was used for conjunction analysis</span>
+		<span class="nb">print</span> <span class="s2">&quot;Initializing lat,lon,alt grid with following parameters:</span><span class="se">\n</span><span class="s2">&quot;</span>
+		<span class="nb">print</span> <span class="s2">&quot;Epoch, Nvert = </span><span class="si">%f</span><span class="s2">, </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">epoch</span><span class="p">,</span><span class="n">nvert</span><span class="p">)</span>
+		<span class="p">(</span><span class="n">epoch</span><span class="p">,</span><span class="n">nvert</span><span class="p">)</span>
+		<span class="nb">print</span> <span class="s2">&quot;Lat min,max,npts = </span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">glatmin</span><span class="p">,</span><span class="n">glatmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nlat</span><span class="p">)</span>
+		<span class="nb">print</span> <span class="s2">&quot;Lon min,max,npts = </span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">glonmin</span><span class="p">,</span><span class="n">glonmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">)</span>
+		<span class="nb">print</span> <span class="s2">&quot;Alt min,max,npts = </span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="s2">,</span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">altmin</span><span class="p">,</span><span class="n">altmax</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nalt</span><span class="p">)</span>
+		
+		<span class="p">(</span><span class="n">gplat</span><span class="p">,</span><span class="n">gplon</span><span class="p">,</span><span class="n">gpalt</span><span class="p">)</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">ggrid</span><span class="p">(</span><span class="n">nvert</span><span class="o">=</span><span class="n">nvert</span><span class="p">,</span>
+										 <span class="n">glamn</span><span class="o">=</span><span class="n">glatmin</span><span class="p">,</span> <span class="n">glamx</span><span class="o">=</span><span class="n">glatmax</span><span class="p">,</span>
+										 <span class="n">glomn</span><span class="o">=</span><span class="n">glonmin</span><span class="p">,</span>   <span class="n">glomx</span><span class="o">=</span><span class="n">glonmax</span><span class="p">,</span>
+										 <span class="n">altmn</span><span class="o">=</span><span class="n">altmin</span><span class="p">,</span>   <span class="n">altmx</span><span class="o">=</span><span class="n">altmax</span><span class="p">,</span>
+										 <span class="n">nlat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">,</span>  <span class="n">nalt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nalt</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gplat</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gplon</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[</span><span class="s1">&#39;alt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gpalt</span>
+
+		<span class="nb">print</span> <span class="s2">&quot;Preparing interpolation tables...&quot;</span>
+		<span class="c1"># Create interpolation tables for a single time</span>
+		<span class="n">ist</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">apxmka</span><span class="p">(</span><span class="n">msgun</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="c1">#msgun is message unit?</span>
+						  <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span>
+						  <span class="n">gplat</span><span class="o">=</span><span class="n">gplat</span><span class="p">,</span> <span class="n">gplon</span><span class="o">=</span><span class="n">gplon</span><span class="p">,</span> <span class="n">gpalt</span><span class="o">=</span><span class="n">gpalt</span><span class="p">,</span>
+						  <span class="n">wk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workArray</span><span class="p">,</span>
+						  <span class="n">nlat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlat</span><span class="p">,</span>   <span class="n">nlon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nlon</span><span class="p">,</span>   <span class="n">nalt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nalt</span><span class="p">)</span> 
+		<span class="k">if</span> <span class="n">ist</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unable to make the interpolation tables: Return code was </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ist</span><span class="p">))</span>
+
+<div class="viewcode-block" id="apex_converter.identicalInputs"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.identicalInputs">[docs]</a>	<span class="k">def</span> <span class="nf">identicalInputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Test if the self.lastrun represents the results obtained by transforming inputs time,lat,lon,alt,hr</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">retval</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="s1">&#39;lastrun&#39;</span><span class="p">):</span> <span class="c1">#Check for lastrun attribute existance </span>
+			<span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">inputval</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span> <span class="k">for</span> <span class="n">inputval</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;hr&#39;</span><span class="p">]):</span> <span class="c1">#Check for valid lastrun dictionary keys</span>
+				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]):</span> <span class="c1">#Check for equal size</span>
+					<span class="n">equality_checks</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">]),</span>
+									   <span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;lon&#39;</span><span class="p">]),</span> 
+									   <span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">alt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;alt&#39;</span><span class="p">]),</span>
+									   <span class="n">hr</span>  <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;hr&#39;</span><span class="p">]]</span>
+					<span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">equality_checks</span><span class="p">):</span> 
+						<span class="c1">#Check for equal values</span>
+						<span class="n">retval</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">return</span> <span class="n">retval</span></div>
+
+<div class="viewcode-block" id="apex_converter.solarParams"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.solarParams">[docs]</a>	<span class="k">def</span> <span class="nf">solarParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">utseconds</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Gets the geographic latitude and longitude of the </span>
+<span class="sd">		northern geomagnetic pole and the subsolar point(s)</span>
+<span class="sd">		for a particular year and day of year.</span>
+
+<span class="sd">		Note that the geomagnetic north pole coordinate returned</span>
+<span class="sd">		are determined by the epoch setting of this apex_converter</span>
+<span class="sd">		instance and not explicitly by the year/day-of-year argument.</span>
+<span class="sd">		If you are not using a year/day-of-year that agrees </span>
+<span class="sd">		with the epoch setting (self.epoch), you&#39;ll get incorrect</span>
+<span class="sd">		results. </span>
+
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">			year : int or numpy.array, length 1</span>
+<span class="sd">				The year for which to get the subsolar point(s)</span>
+<span class="sd">			dayofyear : int or numpy.array, length 1</span>
+<span class="sd">				The day of the year for which to get the subsolar point(s)</span>
+<span class="sd">			utseconds : numpy.array</span>
+<span class="sd">				The Universal Time second of the day for which</span>
+<span class="sd">				to obtain the subsolar points.</span>
+<span class="sd">		</span>
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">			subsllat : numpy.array len(utseconds)</span>
+<span class="sd">				geographic latitude(s) of subsolar point</span>
+<span class="sd">			subsllon : numpy.array len(utseconds)</span>
+<span class="sd">				geographic lons(s) of subsolar point</span>
+<span class="sd">			nplat : numpy.array len(1)</span>
+<span class="sd">				north geographic latitude of magnetic north pole</span>
+<span class="sd">			nplon : numpy.array len(1)</span>
+<span class="sd">				east geographic longitude of magnetic north pole</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">year</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">dayofyear</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">utseconds</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">utseconds</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">utseconds</span><span class="p">)</span>
+
+		<span class="n">hour</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">utseconds</span><span class="o">/</span><span class="mi">3600</span><span class="p">)</span>
+		<span class="n">minute</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mi">3600</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>
+		<span class="n">second</span> <span class="o">=</span> <span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mi">3600</span> <span class="o">-</span> <span class="n">minute</span><span class="o">*</span><span class="mi">60</span>
+
+		<span class="n">epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+		<span class="c1">#Set IGRF coeffcients to current epoch</span>
+		<span class="n">apex</span><span class="o">.</span><span class="n">cofrm</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+		<span class="n">clatp</span><span class="p">,</span><span class="n">polon</span><span class="p">,</span><span class="n">vp</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">dypol</span><span class="p">()</span>
+
+		<span class="n">nplat</span> <span class="o">=</span> <span class="mf">90.</span><span class="o">-</span><span class="n">clatp</span>
+		<span class="n">nplon</span> <span class="o">=</span> <span class="n">polon</span>
+
+		<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">utseconds</span><span class="p">)</span>
+		<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">utseconds</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+				<span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">minute</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">second</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+		<span class="k">else</span><span class="p">:</span> 
+			<span class="n">sbsllat</span><span class="p">,</span><span class="n">sbsllon</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">,</span><span class="n">minute</span><span class="p">,</span><span class="n">second</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">sbsllat</span><span class="p">,</span><span class="n">sbsllon</span><span class="p">,</span><span class="n">nplat</span><span class="p">,</span><span class="n">nplon</span></div>
+
+<div class="viewcode-block" id="apex_converter.mlt2alon"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.mlt2alon">[docs]</a>	<span class="k">def</span> <span class="nf">mlt2alon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mlt</span><span class="p">,</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">utseconds</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Converts Magnetic Local Time to Apex Longitudes</span>
+
+<span class="sd">		Calls apex subroutine apex.mlt2alon (mag local time) </span>
+<span class="sd">		after setting the IGRF coefficient global variables using</span>
+<span class="sd">		the same epoch as was used to initially </span>
+<span class="sd">		generate the interpolation tables. </span>
+<span class="sd">		</span>
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		mlt : numpy.array</span>
+<span class="sd">			a numpy array of length n, apex longitude</span>
+<span class="sd">		year : int or numpy.array</span>
+<span class="sd">			The year for which to compute the MLT</span>
+<span class="sd">		dayofyear : int or numpy.array</span>
+<span class="sd">			The day-of-year(s) for which MLT is to be found</span>
+<span class="sd">		utseconds : int or numpy.array </span>
+<span class="sd">			the second-of-the-day(s) in UT</span>
+<span class="sd">			of the time for which the MLT is to be found</span>
+<span class="sd">		</span>
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		mlt : numpy.array</span>
+<span class="sd">			The magnetic local time corresponding to alon for</span>
+<span class="sd">			the times specified</span>
+
+<span class="sd">		Notes</span>
+<span class="sd">		-----</span>
+<span class="sd">			Options for time argument (year,dayofyear,utseconds) length</span>
+
+<span class="sd">			#. All have length 1 for MLT of all alons for a fixed time.</span>
+<span class="sd">			#. Year,and Day of year can have length 1,and then UT seconds can have length n for different times on same day</span>
+<span class="sd">			#. All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1">#Make sure everything that is supposed to be an array is one</span>
+		<span class="c1">#Had to do this to make sure everything has a length, since we check that later</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mlt</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">mlt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">year</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">dayofyear</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">utseconds</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">utseconds</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">utseconds</span><span class="p">)</span>
+		
+		<span class="nb">print</span> <span class="s2">&quot;Computing </span><span class="si">%d</span><span class="s2"> Magnetic Local Time values to Apex Longitude...</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span> <span class="p">)</span>
+		<span class="n">hour</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">utseconds</span><span class="o">/</span><span class="mi">3600</span><span class="p">)</span>
+		<span class="n">minute</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mi">3600</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>
+		<span class="n">second</span> <span class="o">=</span> <span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mf">3600.</span> <span class="o">-</span> <span class="n">minute</span><span class="o">*</span><span class="mf">60.</span>
+
+		<span class="c1">#Set IGRF coeffcients to current epoch</span>
+		<span class="n">apex</span><span class="o">.</span><span class="n">cofrm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch</span><span class="p">)</span>
+		<span class="n">clatp</span><span class="p">,</span><span class="n">polon</span><span class="p">,</span><span class="n">vp</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">dypol</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
+			<span class="n">sbsllat1</span><span class="p">,</span><span class="n">sbsllon1</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">,</span><span class="n">minute</span><span class="p">,</span><span class="n">second</span><span class="p">)</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span><span class="o">*</span><span class="n">sbsllat1</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span><span class="o">*</span><span class="n">sbsllon1</span>
+		<span class="k">elif</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">mlt</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">mlt</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">mlt</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">lon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mlt</span><span class="p">):</span>
+				<span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">dayofyear</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">hour</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">minute</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">second</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+		<span class="k">elif</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">mlt</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">lon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mlt</span><span class="p">):</span>
+				<span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">minute</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">second</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of time arguments must either be 1 or equal to length of longitude argument!</span><span class="se">\n</span><span class="s2">year.size=</span><span class="si">%d</span><span class="se">\n</span><span class="s2">dayofyear.size=</span><span class="si">%d</span><span class="se">\n</span><span class="s2">utseconds.size=</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+		<span class="n">alon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mlt</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mlt</span><span class="p">)):</span>
+			<span class="c1">#Call signitude subroutine mlt2alon(xmlt,sbsllat,sbsllon,clatp,polon,alonx)</span>
+			<span class="n">alon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">mlt2alon</span><span class="p">(</span><span class="n">mlt</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">clatp</span><span class="p">,</span><span class="n">polon</span><span class="p">)</span>
+		<span class="c1">#Sanity check magnetic local time</span>
+		<span class="n">alon</span><span class="p">[</span><span class="n">alon</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">alon</span><span class="p">[</span><span class="n">alon</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mf">360.</span>
+		<span class="n">alon</span><span class="p">[</span><span class="n">alon</span><span class="o">&gt;</span><span class="mf">360.</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">alon</span><span class="p">[</span><span class="n">alon</span><span class="o">&gt;</span><span class="mf">360.</span><span class="p">],</span><span class="mf">360.</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">alon</span></div>
+
+<div class="viewcode-block" id="apex_converter.alon2mlt"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.alon2mlt">[docs]</a>	<span class="k">def</span> <span class="nf">alon2mlt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alon</span><span class="p">,</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">utseconds</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Converts Apex Longitudes to Magnetic Local Time</span>
+
+<span class="sd">		Calls apex subroutine apex.magloctm (mag local time) </span>
+<span class="sd">		after setting the IGRF coefficient global variables using</span>
+<span class="sd">		the same epoch as was used to initially </span>
+<span class="sd">		generate the interpolation tables. </span>
+
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		alon : numpy.array</span>
+<span class="sd">			a numpy array of length n, apex longitude</span>
+<span class="sd">		year : int or numpy.array</span>
+<span class="sd">			The year for which to compute the MLT</span>
+<span class="sd">		dayofyear : int or numpy.array</span>
+<span class="sd">			The day-of-year(s) for which MLT is to be found</span>
+<span class="sd">		utseconds : int or numpy.array </span>
+<span class="sd">			the second-of-the-day(s) in UT</span>
+<span class="sd">			of the time for which the MLT is to be found</span>
+<span class="sd">		</span>
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		mlt : numpy.array</span>
+<span class="sd">			The magnetic local time corresponding to alon for</span>
+<span class="sd">			the times specified</span>
+
+<span class="sd">		Notes</span>
+<span class="sd">		-----</span>
+<span class="sd">			Options for time argument (year,dayofyear,utseconds) length</span>
+
+<span class="sd">			#. All have length 1 for MLT of all alons for a fixed time.</span>
+<span class="sd">			#. Year,and Day of year can have length 1, and then UT seconds can have length n for different times on same day</span>
+<span class="sd">			#. All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="c1">#Make sure everything that is supposed to be an array is one</span>
+		<span class="c1">#Had to do this to make sure everything has a length, since we check that later</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">alon</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">alon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">year</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">dayofyear</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dayofyear</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">utseconds</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+			<span class="n">utseconds</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">utseconds</span><span class="p">)</span>
+		
+		<span class="nb">print</span> <span class="s2">&quot;Computing </span><span class="si">%d</span><span class="s2"> Apex Longitude values to Magnetic Local Time...</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span> <span class="p">)</span>
+		<span class="n">hour</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">utseconds</span><span class="o">/</span><span class="mi">3600</span><span class="p">)</span>
+		<span class="n">minute</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mi">3600</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>
+		<span class="n">second</span> <span class="o">=</span> <span class="n">utseconds</span> <span class="o">-</span> <span class="n">hour</span><span class="o">*</span><span class="mf">3600.</span> <span class="o">-</span> <span class="n">minute</span><span class="o">*</span><span class="mf">60.</span>
+
+		<span class="n">epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+		<span class="c1">#Set IGRF coeffcients to current epoch</span>
+		<span class="n">apex</span><span class="o">.</span><span class="n">cofrm</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+		<span class="c1">#Obtain the dipole position</span>
+		<span class="c1">#Original comments:</span>
+		<span class="c1"># 		      SUBROUTINE DYPOL (COLAT,ELON,VP)</span>
+		<span class="c1"># C          Computes parameters for dipole component of geomagnetic field.</span>
+		<span class="c1"># C          COFRM must be called before calling DYPOL!</span>
+		<span class="c1"># C          940504 A. D. Richmond</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C          INPUT from COFRM through COMMON /MAGCOF/ NMAX,GB(196),GV(196),ICHG</span>
+		<span class="c1"># C            NMAX = Maximum order of spherical harmonic coefficients used</span>
+		<span class="c1"># C            GB   = Coefficients for magnetic field calculation</span>
+		<span class="c1"># C            GV   = Coefficients for magnetic potential calculation</span>
+		<span class="c1"># C            ICHG = Flag indicating when GB,GV have been changed</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C          RETURNS:</span>
+		<span class="c1"># C            COLAT = Geocentric colatitude of geomagnetic dipole north pole</span>
+		<span class="c1"># C                    (deg)</span>
+		<span class="c1"># C            ELON  = East longitude of geomagnetic dipole north pole (deg)</span>
+		<span class="c1"># C            VP    = Magnitude, in T.m, of dipole component of magnetic</span>
+		<span class="c1"># C                    potential at geomagnetic pole and geocentric radius</span>
+		<span class="c1"># C                    of 6371.2 km</span>
+		<span class="n">clatp</span><span class="p">,</span><span class="n">polon</span><span class="p">,</span><span class="n">vp</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">dypol</span><span class="p">()</span>
+
+		<span class="c1"># 		      SUBROUTINE SUBSOL (IYR,IDAY,IHR,IMN,SEC,SBSLLAT,SBSLLON)</span>
+		<span class="c1"># C          Find subsolar geographic latitude and longitude given the</span>
+		<span class="c1"># C          date and time (Universal Time).</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C          This is based on formulas in Astronomical Almanac for the</span>
+		<span class="c1"># C          year 1996, p.  C24. (U.S.  Government Printing Office,</span>
+		<span class="c1"># C          1994).  According to the Almanac, results are good to at</span>
+		<span class="c1"># C          least 0.01 degree latitude and 0.025 degree longitude</span>
+		<span class="c1"># C          between years 1950 and 2050.  Accuracy for other years has</span>
+		<span class="c1"># C          not been tested although the algorithm has been designed to</span>
+		<span class="c1"># C          accept input dates from 1601 to 2100.  Every day is assumed</span>
+		<span class="c1"># C          to have exactly 86400 seconds; thus leap seconds that</span>
+		<span class="c1"># C          sometimes occur on June 30 and December 31 are ignored:</span>
+		<span class="c1"># C          their effect is below the accuracy threshold of the algorithm.</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C          961026 A. D. Richmond, NCAR</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C          INPUTS:</span>
+		<span class="c1"># C            IYR  = Year (e.g., 1994). IYR must be in the range: 1601 to 2100.</span>
+		<span class="c1"># C            IDAY = Day number of year (e.g., IDAY = 32 for Feb 1)</span>
+		<span class="c1"># C            IHR  = Hour of day    (e.g., 13 for 13:49)</span>
+		<span class="c1"># C            IMN  = Minute of hour (e.g., 49 for 13:49)</span>
+		<span class="c1"># C            SEC  = Second and fraction after the hour/minute.</span>
+		<span class="c1"># C          Note:  While IYR is bounds tested, there is no constraint</span>
+		<span class="c1"># C                 placed on values: IDAY,IHR,IMN,SEC; e.g., IHR=25 is</span>
+		<span class="c1"># C                 properly interpreted.</span>
+		<span class="c1"># C          RETURNS:</span>
+		<span class="c1"># C            SBSLLAT = geographic latitude of subsolar point (degrees)</span>
+		<span class="c1"># C            SBSLLON = geographic longitude of subsolar point (degrees,</span>
+		<span class="c1"># C                      between -180 and +180)</span>
+		<span class="k">if</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> 
+			<span class="n">sbsllat1</span><span class="p">,</span><span class="n">sbsllon1</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">,</span><span class="n">minute</span><span class="p">,</span><span class="n">second</span><span class="p">)</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span><span class="o">*</span><span class="n">sbsllat1</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span><span class="o">*</span><span class="n">sbsllon1</span>
+		<span class="k">elif</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">alon</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">alon</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">alon</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">lon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">alon</span><span class="p">):</span>
+				<span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">dayofyear</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">hour</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">minute</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">second</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+		<span class="k">elif</span> <span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="o">==</span><span class="n">alon</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+			<span class="n">sbsllat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+			<span class="n">sbsllon</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">lon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">alon</span><span class="p">):</span>
+				<span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">subsol</span><span class="p">(</span><span class="n">year</span><span class="p">,</span><span class="n">dayofyear</span><span class="p">,</span><span class="n">hour</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">minute</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">second</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Length of time arguments must either be 1 or equal to length of longitude argument!</span><span class="se">\n</span><span class="s2">year.size=</span><span class="si">%d</span><span class="se">\n</span><span class="s2">dayofyear.size=</span><span class="si">%d</span><span class="se">\n</span><span class="s2">utseconds.size=</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">year</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">dayofyear</span><span class="o">.</span><span class="n">size</span><span class="p">,</span><span class="n">utseconds</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+		<span class="c1">#Original Comments from magloctm.f:</span>
+		<span class="c1">#SUBROUTINE MAGLOCTM (ALON,SBSLLAT,SBSLLON,CLATP,POLON,MLT)</span>
+		<span class="c1"># C  Computes magnetic local time from magnetic longitude, subsolar coordinates,</span>
+		<span class="c1"># C   and geomagnetic pole coordinates.</span>
+		<span class="c1"># C  950302 A. D. Richmond, NCAR</span>
+		<span class="c1"># C  Algorithm:  MLT is calculated from the difference of the apex longitude,</span>
+		<span class="c1"># C   alon, and the geomagnetic dipole longitude of the subsolar point.</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C   Inputs:</span>
+		<span class="c1"># C    ALON    = apex magnetic longitude of the point (deg)</span>
+		<span class="c1"># C    SBSLLAT = geographic latitude of subsolar point (degrees)</span>
+		<span class="c1"># C    SBSLLON = geographic longitude of subsolar point (degrees)</span>
+		<span class="c1"># C    CLATP   = Geocentric colatitude of geomagnetic dipole north pole (deg)</span>
+		<span class="c1"># C    POLON   = East longitude of geomagnetic dipole north pole (deg)</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C   Output:</span>
+		<span class="c1"># C    mlt (real) = magnetic local time for the apex longitude alon (hours)</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C To go from mlt to alon (see comments following Entry mlt2alon for definition </span>
+		<span class="c1"># C  of variables), use:</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C     CALL MLT2ALON (MLT,SBSLLAT,SBSLLON,CLATP,POLON,ALON)</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C  NOTE: If the calling routine uses subroutine magloctm in conjunction with </span>
+		<span class="c1"># C   file magfld.f (which is used by subroutine APEX), then clatp and polon can </span>
+		<span class="c1"># C   be found by invoking</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C     CALL DYPOL (CLATP,POLON,VP)</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C   where vp is an unneeded variable.  (Note that subroutine COFRM must have</span>
+		<span class="c1"># C   been called before DYPOL, in order to set up the coefficients for the</span>
+		<span class="c1"># C   desired epoch.)  Alternatively, if subroutine apxntrp is</span>
+		<span class="c1"># C   used to get alon from previously computed arrays, then</span>
+		<span class="c1"># C   clatp and polon can be obtained for use in magloctm by adding</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C     COMMON /APXDIPL/ CLATP,POLON,DUM1,DUM2,DUM3</span>
+		<span class="c1"># C</span>
+		<span class="c1"># C   to the calling routine (where DUM1,DUM2,DUM3 are unneeded dummy variables).</span>
+		<span class="c1"># C</span>
+		<span class="n">mlt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alon</span><span class="p">)):</span>
+			<span class="n">mlt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">magloctm</span><span class="p">(</span><span class="n">alon</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllat</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">sbsllon</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">clatp</span><span class="p">,</span><span class="n">polon</span><span class="p">)</span>
+		<span class="c1">#Sanity check magnetic local time</span>
+		<span class="n">mlt</span><span class="p">[</span><span class="n">mlt</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">mlt</span><span class="p">[</span><span class="n">mlt</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">24</span>
+		<span class="n">mlt</span><span class="p">[</span><span class="n">mlt</span><span class="o">&gt;</span><span class="mi">24</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">mlt</span><span class="p">[</span><span class="n">mlt</span><span class="o">&gt;</span><span class="mi">24</span><span class="p">],</span><span class="mi">24</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">mlt</span></div>
+
+<div class="viewcode-block" id="apex_converter.getTransformationResults"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.getTransformationResults">[docs]</a>	<span class="k">def</span> <span class="nf">getTransformationResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="mf">110.</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Converts a set of points to Apex, also saves the results from APXMALL</span>
+<span class="sd">		into a class parameter so they can be reused.</span>
+<span class="sd">		</span>
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		lat : numpy.array</span>
+<span class="sd">			Geographic latitude in degrees with N positive (length n)</span>
+<span class="sd">		lon : numpy.array </span>
+<span class="sd">			Geographic longitude in degress with E positive (length n)</span>
+<span class="sd">		alt : numpy.array </span>
+<span class="sd">			Altitude of measurement in km (length n)</span>
+<span class="sd">		hr  : float </span>
+<span class="sd">			Modified Apex reference altitude in km (see Richmond,1995 for description of coordinates)</span>
+<span class="sd">	</span>
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+
+<span class="sd">		Notes</span>
+<span class="sd">		-----</span>
+<span class="sd">			Saves the following variables to the dictionary self.lastrun. </span>
+<span class="sd">			All values are numpy arrays of dimensions [n,1], [n,2] or [n,3].</span>
+<span class="sd">			</span>
+<span class="sd">			* b - magnetic field components (east, north, up), in nT</span>
+<span class="sd">			* bhat - components (east, north, up) of unit vector along the geomagnetic field direction</span>
+<span class="sd">			* bmag - magnetic field magnitude, nT</span>
+<span class="sd">			* si - sin(I) where I is the angle of inclination of the field line below the horizontal</span>
+<span class="sd">			* alon - Apex longitude = Modified Apex longitude = Quasi-Dipole longitude, degrees</span>
+<span class="sd">			* xlatm - Modified Apex latitude, degrees</span>
+<span class="sd">			* vmp - magnetic potential, in T.m</span>
+<span class="sd">			* wm - Wm of reference above, in km**2 /nT; i.e., 10**15 m**2 /T)</span>
+<span class="sd">			* d - D of reference above</span>
+<span class="sd">			* be3 - B_e3 of reference above (= Bmag/D), in nT</span>
+<span class="sd">			* sim - sin(I_m) of reference above</span>
+<span class="sd">			* d1,d2,d3,e1,e2,e3 - Modified Apex coordinates base vectors, each with three components (east, north, up) as described in reference above</span>
+<span class="sd">			* xlatqd - Quasi-Dipole latitude, degrees</span>
+<span class="sd">			* f - F for Quasi-Dipole coordinates described in reference above</span>
+<span class="sd">			* f1,f2 - Quasi-Dipole coordinates base vectors with components (east, north) described in reference above</span>
+<span class="sd">			* ist - Return status: 0 (okay) or 1 (failed).</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">lon</span><span class="p">[</span><span class="n">lon</span><span class="o">&gt;</span><span class="mf">180.</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">lon</span><span class="o">&gt;</span><span class="mf">180.</span><span class="p">]</span><span class="o">-</span><span class="mf">360.</span>
+		<span class="n">lon</span><span class="p">[</span><span class="n">lon</span><span class="o">&lt;-</span><span class="mf">180.</span><span class="p">]</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="n">lon</span><span class="o">&lt;-</span><span class="mf">180.</span><span class="p">]</span><span class="o">+</span><span class="mf">360.</span>
+		<span class="c1">#if hr &lt; self.altmin or hr &gt; self.altmax:</span>
+		<span class="c1">#	raise ValueError(&#39;Reference height %f is not within altitude limits (%f-%f)!&#39; % (hr,self.altmin,self.altmax)) </span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identicalInputs</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="p">):</span>
+			<span class="n">npts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+			<span class="c1">#Init outputs</span>
+			<span class="c1"># real intent(in) :: glat</span>
+			<span class="c1">#       real intent(in) :: glon</span>
+			<span class="c1">#       real intent(in) :: alt</span>
+			<span class="c1">#       real intent(in) :: hr</span>
+			  <span class="c1">#       real dimension(lwk),intent(in) :: wk</span>
+			  <span class="c1">#       integer intent(in) :: lwk</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: b</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: bhat</span>
+			  <span class="c1">#       real intent(out) :: bmag</span>
+			  <span class="c1">#       real intent(out) :: si</span>
+			  <span class="c1">#       real intent(out) :: alon</span>
+			  <span class="c1">#       real intent(out) :: xlatm</span>
+			  <span class="c1">#       real intent(out) :: vmp</span>
+			  <span class="c1">#       real intent(out) :: wm</span>
+			  <span class="c1">#       real intent(out) :: d</span>
+			  <span class="c1">#       real intent(out) :: be3</span>
+			  <span class="c1">#       real intent(out) :: sim</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: d1</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: d2</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: d3</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: e1</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: e2</span>
+			  <span class="c1">#       real dimension(3),intent(out) :: e3</span>
+			  <span class="c1">#       real intent(out) :: xlatqd</span>
+			  <span class="c1">#       real intent(out) :: f</span>
+			  <span class="c1">#       real dimension(2),intent(out) :: f1</span>
+			  <span class="c1">#       real dimension(2),intent(out) :: f2</span>
+
+			<span class="c1">#Init scalar variables</span>
+			<span class="n">bmag</span><span class="p">,</span><span class="n">si</span><span class="p">,</span><span class="n">alon</span><span class="p">,</span><span class="n">xlatm</span><span class="p">,</span><span class="n">vmp</span><span class="p">,</span><span class="n">wm</span><span class="p">,</span><span class="n">d</span><span class="p">,</span><span class="n">be3</span><span class="p">,</span><span class="n">sim</span><span class="p">,</span><span class="n">xlatqd</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">ist</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>\
+														<span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>\
+														<span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+			<span class="n">b</span><span class="p">,</span><span class="n">bhat</span><span class="p">,</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">,</span><span class="n">d3</span><span class="p">,</span><span class="n">e1</span><span class="p">,</span><span class="n">e2</span><span class="p">,</span><span class="n">e3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span>\
+									<span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span>\
+									<span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+			<span class="n">f1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+			<span class="n">f2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">npts</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+			
+			<span class="nb">print</span> <span class="s2">&quot;Transforming </span><span class="si">%d</span><span class="s2"> points from lat,lon,alt to apex...&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">npts</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">npts</span><span class="p">):</span>
+				<span class="k">if</span> <span class="n">ist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="c1">#Return status == success</span>
+					<span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">bhat</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">bmag</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+					 <span class="n">si</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">alon</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">xlatm</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">vmp</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">wm</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">be3</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">sim</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+					 <span class="n">d1</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">d2</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">d3</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">e1</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">e2</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">e3</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span>
+					 <span class="n">xlatqd</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">f1</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">f2</span><span class="p">[</span><span class="n">i</span><span class="p">,:],</span><span class="n">ist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">apxmall</span><span class="p">(</span><span class="n">glat</span><span class="o">=</span><span class="n">lat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+														<span class="n">glon</span><span class="o">=</span><span class="n">lon</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+														<span class="n">alt</span><span class="o">=</span><span class="n">alt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+														<span class="n">hr</span><span class="o">=</span><span class="n">hr</span><span class="p">,</span>
+														<span class="n">wk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workArray</span><span class="p">)</span>
+				<span class="k">else</span><span class="p">:</span> 
+					<span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Call to APXMALL failed at point #</span><span class="si">%d</span><span class="s1"> for unknown reasons (Fortran code does not introspect)&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+			
+			<span class="n">varnames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span><span class="s1">&#39;alt&#39;</span><span class="p">,</span><span class="s1">&#39;hr&#39;</span><span class="p">,</span><span class="s1">&#39;b&#39;</span><span class="p">,</span><span class="s1">&#39;bhat&#39;</span><span class="p">,</span><span class="s1">&#39;bmag&#39;</span><span class="p">,</span>
+			 <span class="s1">&#39;si&#39;</span><span class="p">,</span><span class="s1">&#39;alon&#39;</span><span class="p">,</span><span class="s1">&#39;xlatm&#39;</span><span class="p">,</span><span class="s1">&#39;vmp&#39;</span><span class="p">,</span><span class="s1">&#39;wm&#39;</span><span class="p">,</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="s1">&#39;be3&#39;</span><span class="p">,</span><span class="s1">&#39;sim&#39;</span><span class="p">,</span>
+			 <span class="s1">&#39;d1&#39;</span><span class="p">,</span><span class="s1">&#39;d2&#39;</span><span class="p">,</span><span class="s1">&#39;d3&#39;</span><span class="p">,</span><span class="s1">&#39;e1&#39;</span><span class="p">,</span><span class="s1">&#39;e2&#39;</span><span class="p">,</span><span class="s1">&#39;e3&#39;</span><span class="p">,</span>
+			 <span class="s1">&#39;xlatqd&#39;</span><span class="p">,</span><span class="s1">&#39;f&#39;</span><span class="p">,</span><span class="s1">&#39;f1&#39;</span><span class="p">,</span><span class="s1">&#39;f2&#39;</span><span class="p">,</span><span class="s1">&#39;ist&#39;</span><span class="p">]</span>
+
+			<span class="c1">#Make a dictionary of the output from this run and store it in lastrun, </span>
+			<span class="c1">#that way, we can avoid re-running when inputs are identical  </span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+			<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span> 
+				<span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">print</span> <span class="s2">&quot;Inputs identical to last run, results already in attribute lastrun</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+			
+
+<div class="viewcode-block" id="apex_converter.geo2apex"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.geo2apex">[docs]</a>	<span class="k">def</span> <span class="nf">geo2apex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="mf">110.</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Does a simple transformation of observation positions from geographic to apex</span>
+<span class="sd">		</span>
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		lat : numpy.array </span>
+<span class="sd">			Observation Geographic latitudes</span>
+<span class="sd">		lon : numpy.array </span>
+<span class="sd">			Observation Geographic longitudes</span>
+<span class="sd">		alt : numpy.array </span>
+<span class="sd">			Observation Altitudes in km</span>
+<span class="sd">		hr=110. : float</span>
+<span class="sd">			Modified Apex reference height in km</span>
+
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		alat : numpy.array</span>
+<span class="sd">			Modified Apex Latitude</span>
+<span class="sd">		alon : numpy.array</span>
+<span class="sd">			Apex Longitude</span>
+<span class="sd">		qdlat : numpy.array</span>
+<span class="sd">			Quasi-Dipole Latitude</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">getTransformationResults</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="n">hr</span><span class="p">)</span>
+
+		<span class="n">alat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;xlatm&#39;</span><span class="p">]</span>
+		<span class="n">alon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;alon&#39;</span><span class="p">]</span>
+		<span class="n">qdlat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;xlatqd&#39;</span><span class="p">]</span>
+		
+		<span class="k">return</span> <span class="n">alat</span><span class="p">,</span><span class="n">alon</span><span class="p">,</span><span class="n">qdlat</span></div>
+
+<div class="viewcode-block" id="apex_converter.apex2geo"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.apex2geo">[docs]</a>	<span class="k">def</span> <span class="nf">apex2geo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">alat</span><span class="p">,</span><span class="n">alon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="mf">110.</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Does a simple transformation of observation positions from modified apex to geodetic</span>
+<span class="sd">		</span>
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		alat : numpy.array </span>
+<span class="sd">			Modified Apex latitudes</span>
+<span class="sd">		alon : numpy.array </span>
+<span class="sd">			Modified Apex longitudes</span>
+<span class="sd">		alt : numpy.array </span>
+<span class="sd">			Altitude to get coordinates for in km</span>
+<span class="sd">		hr=110. : float</span>
+<span class="sd">			Modified Apex reference height in km</span>
+
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		gdlat : numpy.array</span>
+<span class="sd">			Geodetic Latitude</span>
+<span class="sd">		gdlon : numpy.array</span>
+<span class="sd">			Geodetic Longitude</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">gdlats</span><span class="p">,</span><span class="n">gdlons</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alat</span><span class="p">),</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">alon</span><span class="p">)</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">n_alts</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span>
+		<span class="k">except</span><span class="p">:</span>
+			<span class="n">n_alts</span> <span class="o">=</span> <span class="mi">1</span>
+
+		<span class="k">if</span> <span class="n">n_alts</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+			<span class="n">alt</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">alat</span><span class="p">)</span><span class="o">*</span><span class="n">alt</span>
+
+		<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alat</span><span class="p">)):</span>
+			<span class="p">(</span><span class="n">this_gdlat</span><span class="p">,</span> <span class="n">this_gdlon</span><span class="p">,</span> <span class="n">this_ist</span><span class="p">)</span> <span class="o">=</span> <span class="n">apex</span><span class="o">.</span><span class="n">apxm2g</span><span class="p">(</span><span class="n">xlatm</span><span class="o">=</span><span class="n">alat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+	                                          <span class="n">alon</span><span class="o">=</span><span class="n">alon</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+	                                          <span class="n">alt</span><span class="o">=</span><span class="n">alt</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+	                                          <span class="n">hr</span><span class="o">=</span><span class="n">hr</span><span class="p">,</span>
+	                                          <span class="n">wk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workArray</span><span class="p">,</span>
+	                                          <span class="n">lwk</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workArray</span><span class="p">))</span>
+			<span class="n">gdlats</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">gdlons</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_gdlat</span><span class="p">,</span><span class="n">this_gdlon</span>
+
+		<span class="k">return</span> <span class="n">gdlats</span><span class="p">,</span><span class="n">gdlons</span></div>
+
+<div class="viewcode-block" id="apex_converter.measurement2apex"><a class="viewcode-back" href="../../index.html#apexpy.apex_converter.apex_converter.measurement2apex">[docs]</a>	<span class="k">def</span> <span class="nf">measurement2apex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="mf">110.</span><span class="p">):</span>
+		<span class="c1">#import pdb</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Converts a vector measurement and it&#39;s associated location to modified apex coordinates</span>
+<span class="sd">		</span>
+<span class="sd">		Transforms measurement vector v [m x 3] in geo east, north, up</span>
+<span class="sd">		to apex. Lat, lon, and alt are [m x 1] vectors of locations association with </span>
+<span class="sd">		Measurements in vector v, hr is reference height</span>
+<span class="sd">		</span>
+<span class="sd">		Parameters</span>
+<span class="sd">		----------</span>
+<span class="sd">		lat : numpy.array </span>
+<span class="sd">			geographic latitude</span>
+<span class="sd">		lon : numpy.array</span>
+<span class="sd">			geographic longitude</span>
+<span class="sd">		alt : numpy.array</span>
+<span class="sd">			geographic altitude</span>
+<span class="sd">		v : numpy.array </span>
+<span class="sd">			[nx3] vector to transform</span>
+<span class="sd">		hr : float, optional</span>
+<span class="sd">			Apex reference height in km (default=110.)</span>
+
+<span class="sd">		Returns</span>
+<span class="sd">		-------</span>
+<span class="sd">		alat : numpy.array</span>
+<span class="sd">			Modified Apex Latitude of measurement</span>
+<span class="sd">		alon : numpy.array</span>
+<span class="sd">			Apex Longitude of measurement</span>
+<span class="sd">		v_d : numpy.array</span>
+<span class="sd">			Vector in Apex &#39;d&#39; basis </span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">getTransformationResults</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">alt</span><span class="p">,</span><span class="n">hr</span><span class="o">=</span><span class="n">hr</span><span class="p">)</span>
+
+		<span class="n">alat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;xlatm&#39;</span><span class="p">]</span>
+		<span class="n">alon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;alon&#39;</span><span class="p">]</span>
+		<span class="n">e1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span>
+		<span class="n">e2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span>
+		<span class="n">e3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lastrun</span><span class="p">[</span><span class="s1">&#39;e3&#39;</span><span class="p">]</span>
+
+		<span class="c1">#Make array with same dimension as lat</span>
+		<span class="n">v_d1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+		<span class="n">v_d2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+		<span class="n">v_d3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+		
+		<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])):</span>
+			<span class="n">v_d1</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">c</span><span class="p">,:],</span><span class="n">e1</span><span class="p">[</span><span class="n">c</span><span class="p">,:])</span>
+			<span class="n">v_d2</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">c</span><span class="p">,:],</span><span class="n">e2</span><span class="p">[</span><span class="n">c</span><span class="p">,:])</span>
+			<span class="n">v_d3</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">c</span><span class="p">,:],</span><span class="n">e3</span><span class="p">[</span><span class="n">c</span><span class="p">,:])</span>
+
+		<span class="n">v_d</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">v_d1</span><span class="p">,</span><span class="n">v_d2</span><span class="p">,</span><span class="n">v_d3</span><span class="p">))</span>
+		<span class="c1">#pdb.set_trace()</span>
+		<span class="k">return</span> <span class="n">alat</span><span class="p">,</span><span class="n">alon</span><span class="p">,</span><span class="n">v_d</span></div></div>
+
+		
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">ApexPy 1.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Liam Kilcommons.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.
+    </div>
+  </body>
+</html>

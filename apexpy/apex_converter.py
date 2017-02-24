@@ -13,43 +13,41 @@ import numpy
 #import matplotlib as mpl
 
 class apex_converter:
+	"""	
+	Bulk conversion of geographic coordinates to Modified Apex
 
+	Parameters described are for class constructor
+
+	Parameters
+	----------	
+	glatmin : float, optional
+		Grid boundary: minimum geographic latitude (default=-90.)
+	glatmax : float, optional
+		Grid boundary: maximum geographic latitude (default=-90.)
+	glonmin : float, optional
+		Grid boundary: minimum geographic longitude (default=-180.)
+	glonmax : float, optional
+		Grid boundary: maximum geographic longitude (default=180.)
+	altmin : float, optional
+		Grid boundary: minimum altitude in km (default=300.)
+	altmax : float, optional
+		Grid boundary: minimum altitude in km (default=900.)
+	nvert : float, optional
+		Grid spacing factor. Determines vertical and lat,lon resolution.
+		Recommended values are between 30 and 100. (default=50.)
+	epoch : float, optional
+		Epoch for input into IGRF; the year 
+	
+	Notes
+	-----	
+		* Altitude is in km
+		* Latitude and longitude are in degrees. Negative longitude instead of lon>180.
+		* nvert is the grid spacing factor. Recommended values are between 30 and 100. 
+		* Larger values of nvert will cause the program to use more memory
+		* Unterpolation accuracy will increase up to about nvert of 100. See ggrid.f for more information.
+	"""
 	def __init__(self,glatmin=-90.,glatmax=90.,glonmin=-180.,glonmax=180.,altmin=300., altmax=900.,
 		nvert=50.,epoch=2010.0):
-		"""	
-		Bulk conversion of geographic coordinates to Modified Apex
-
-		Uses numpy-style docstrings for clarity. 
-		Parameters described are for class constructor
-
-		Parameters
-		----------	
-		glatmin : float, optional
-			Grid boundary: minimum geographic latitude (default=-90.)
-		glatmax : float, optional
-			Grid boundary: maximum geographic latitude (default=-90.)
-		glonmin : float, optional
-			Grid boundary: minimum geographic longitude (default=-180.)
-		glonmax : float, optional
-			Grid boundary: maximum geographic longitude (default=180.)
-		altmin : float, optional
-			Grid boundary: minimum altitude in km (default=300.)
-		altmax : float, optional
-			Grid boundary: minimum altitude in km (default=900.)
-		nvert : float, optional
-			Grid spacing factor. Determines vertical and lat,lon resolution.
-			Recommended values are between 30 and 100. (default=50.)
-		epoch : float, optional
-			Epoch for input into IGRF; the year 
-			
-		Altitude is in km
-		Latitude and longitude are in degrees. Negative longitude instead of lon>180.
-		nvert is the grid spacing factor. Recommended values are between 30 and 100. 
-		Larger values will cause the program
-		to use more memory to build larger interpolation tables, 
-		but interpolation accuracy will increase up to about nvert of 100
-		See ggrid.f for more information.
-		"""
 		#Much of the following code is ripped out of test_apxntrp, written by Peter Schmidt at NCAR HAO
 
 		# due to a shortcoming in f2py (documented here http://cens.ioc.ee/pipermail/f2py-users/2008-December/001764.html), 
@@ -254,20 +252,20 @@ class apex_converter:
 			the second-of-the-day(s) in UT
 			of the time for which the MLT is to be found
 		
-		Options for time argument (year,dayofyear,utseconds) length:
-		1. All have length 1 for MLT of all alons for a fixed time.
-		2. Year,and Day of year can have length 1, 
-			and then UT seconds can have length n 
-		 	for different times on same day
-		3. All can have length n to find the MLT 
-			of each alon with a unique date and time 
-			year is year(s) for which MLT is to be found.
-
 		Returns
 		-------
 		mlt : numpy.array
 			The magnetic local time corresponding to alon for
 			the times specified
+
+		Notes
+		-----
+			Options for time argument (year,dayofyear,utseconds) length
+
+			#. All have length 1 for MLT of all alons for a fixed time.
+			#. Year,and Day of year can have length 1,and then UT seconds can have length n for different times on same day
+			#. All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.
+
 		"""
 		#Make sure everything that is supposed to be an array is one
 		#Had to do this to make sure everything has a length, since we check that later
@@ -321,7 +319,7 @@ class apex_converter:
 		after setting the IGRF coefficient global variables using
 		the same epoch as was used to initially 
 		generate the interpolation tables. 
-		
+
 		Parameters
 		----------
 		alon : numpy.array
@@ -334,20 +332,20 @@ class apex_converter:
 			the second-of-the-day(s) in UT
 			of the time for which the MLT is to be found
 		
-		Options for time argument (year,dayofyear,utseconds) length:
-		1. All have length 1 for MLT of all alons for a fixed time.
-		2. Year,and Day of year can have length 1, 
-			and then UT seconds can have length n 
-		 	for different times on same day
-		3. All can have length n to find the MLT 
-			of each alon with a unique date and time 
-			year is year(s) for which MLT is to be found.
-
 		Returns
 		-------
 		mlt : numpy.array
 			The magnetic local time corresponding to alon for
 			the times specified
+
+		Notes
+		-----
+			Options for time argument (year,dayofyear,utseconds) length
+
+			#. All have length 1 for MLT of all alons for a fixed time.
+			#. Year,and Day of year can have length 1, and then UT seconds can have length n for different times on same day
+			#. All can have length n to find the MLT of each alon with a unique date and time year is year(s) for which MLT is to be found.
+
 		"""
 		#Make sure everything that is supposed to be an array is one
 		#Had to do this to make sure everything has a length, since we check that later
@@ -487,7 +485,7 @@ class apex_converter:
 		"""
 		Converts a set of points to Apex, also saves the results from APXMALL
 		into a class parameter so they can be reused.
-
+		
 		Parameters
 		----------
 		lat : numpy.array
@@ -498,30 +496,32 @@ class apex_converter:
 			Altitude of measurement in km (length n)
 		hr  : float 
 			Modified Apex reference altitude in km (see Richmond,1995 for description of coordinates)
+	
+		Returns
+		-------
 
-		Saves the following variables to the dictionary self.lastrun
-		-Before '=' indicates dictionary key
-		-All values are numpy arrays of dimensions [n,1], [n,2] or [n,3]
-		b      = magnetic field components (east, north, up), in nT
-		bhat   = components (east, north, up) of unit vector along the geomagnetic field direction
-		bmag   = magnetic field magnitude, nT
-		si     = sin(I) where I is the angle of inclination of the field
-		             line below the horizontal
-		alon   = Apex longitude = Modified Apex longitude = Quasi-Dipole
-		             longitude, degrees
-		xlatm  = Modified Apex latitude, degrees
-		vmp    = magnetic potential, in T.m
-		wm     = Wm of reference above, in km**2 /nT; i.e., 10**15 m**2 /T)
-		d     = D of reference above
-		be3    = B_e3 of reference above (= Bmag/D), in nT
-		sim    = sin(I_m) of reference above
-		d1,d2,d3,e1,e2,e3 = Modified Apex coordinates base vectors, each with
-		        three components (east, north, up) as described in reference above
-		xlatqd = Quasi-Dipole latitude, degrees
-		f      = F for Quasi-Dipole coordinates described in reference above
-		f1,f2  = Quasi-Dipole coordinates base vectors with components
-		             (east, north) described in reference above
-		ist    = Return status: 0 (okay) or 1 (failed).
+		Notes
+		-----
+			Saves the following variables to the dictionary self.lastrun. 
+			All values are numpy arrays of dimensions [n,1], [n,2] or [n,3].
+			
+			* b - magnetic field components (east, north, up), in nT
+			* bhat - components (east, north, up) of unit vector along the geomagnetic field direction
+			* bmag - magnetic field magnitude, nT
+			* si - sin(I) where I is the angle of inclination of the field line below the horizontal
+			* alon - Apex longitude = Modified Apex longitude = Quasi-Dipole longitude, degrees
+			* xlatm - Modified Apex latitude, degrees
+			* vmp - magnetic potential, in T.m
+			* wm - Wm of reference above, in km**2 /nT; i.e., 10**15 m**2 /T)
+			* d - D of reference above
+			* be3 - B_e3 of reference above (= Bmag/D), in nT
+			* sim - sin(I_m) of reference above
+			* d1,d2,d3,e1,e2,e3 - Modified Apex coordinates base vectors, each with three components (east, north, up) as described in reference above
+			* xlatqd - Quasi-Dipole latitude, degrees
+			* f - F for Quasi-Dipole coordinates described in reference above
+			* f1,f2 - Quasi-Dipole coordinates base vectors with components (east, north) described in reference above
+			* ist - Return status: 0 (okay) or 1 (failed).
+
 		"""
 
 		lon[lon>180.] = lon[lon>180.]-360.
@@ -647,10 +647,10 @@ class apex_converter:
 
 		Returns
 		-------
-		glat : numpy.array
-			Modified Apex Latitude
-		glon : numpy.array
-			Apex Longitude
+		gdlat : numpy.array
+			Geodetic Latitude
+		gdlon : numpy.array
+			Geodetic Longitude
 		"""
 		gdlats,gdlons = numpy.zeros_like(alat),numpy.zeros_like(alon)
 		try:
