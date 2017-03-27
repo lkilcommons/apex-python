@@ -1146,6 +1146,7 @@ C          Test to see if WK has been initialized
 
       ! Quasi-Dipole lat. equation 6.2 (Richmond, 1995)
       QDLA = ACOS ( SQRT((RE+ALTM2)/(RE+HR)) * COS(ALAM2*DTOR) )*RTOD
+      QDLA = SIGN( QDLA, ALAM2 ) ! Error?
       QDLO = ALOM2
       QALT = ALTM2
       GO TO 700

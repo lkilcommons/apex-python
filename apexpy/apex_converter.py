@@ -647,12 +647,15 @@ class apex_converter:
 
 		Returns
 		-------
-		gdlat : numpy.array
-			Geodetic Latitude
-		gdlon : numpy.array
-			Geodetic Longitude
+		glat : numpy.array
+			Geocentric Latitude
+			NOTE: it is not entirely clear if this is geodetic or geocentric in the legacy Fortran
+			The external function (apxm2g) says geodetic, but the internal (apexm2g_legacy) says geocentric. 
+			I tend to belive the internal function, especially because geocentric is so much easier to deal with.
+		glon : numpy.array
+			Geocentric Longitude
 		"""
-		gdlats,gdlons = numpy.zeros_like(alat),numpy.zeros_like(alon)
+		glats,glons = numpy.zeros_like(alat),numpy.zeros_like(alon)
 		try:
 			n_alts = len(alt)
 		except:
@@ -662,15 +665,20 @@ class apex_converter:
 			alt = numpy.ones_like(alat)*alt
 
 		for i in range(len(alat)):
-			(this_gdlat, this_gdlon, this_ist) = apex.apxm2g(xlatm=alat[i],
+			(this_glat, this_glon, this_ist) = apex.apxm2g(xlatm=alat[i],
 	                                          alon=alon[i],
 	                                          alt=alt[i],
 	                                          hr=hr,
 	                                          wk=self.workArray,
 	                                          lwk=len(self.workArray))
-			gdlats[i],gdlons[i] = this_gdlat,this_gdlon
+			if this_ist == -1:
+				print('Warning! Modified Apex to Geo Conversion Low Precision for alat=%f,alon=%f,alt=%f.' % (alat[i],alon[i],alt[i]))
+			elif this_ist > 0:
+				raise RuntimeError('Modified Apex to Geo Conversion failed for alat=%f,alon=%f,alt=%f.' % (alat[i],alon[i],alt[i]))
 
-		return gdlats,gdlons
+			glats[i],glons[i] = this_glat,this_glon
+
+		return glats,glons
 
 	def measurement2apex(self,lat,lon,alt,v,hr=110.):
 		#import pdb
