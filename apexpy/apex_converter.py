@@ -632,7 +632,7 @@ class apex_converter:
 
 	def apex2geo(self,alat,alon,alt,hr=110.):
 		"""
-		Does a simple transformation of observation positions from modified apex to geodetic
+		Does a simple transformation of observation positions from modified apex to geocentric
 		
 		Parameters
 		----------
