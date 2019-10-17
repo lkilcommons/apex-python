@@ -10,7 +10,7 @@ from apexpy import apex
 # 3rd-party
 import numpy
 #import matplotlib.pyplot as pp
-#import matplotlib as mpl
+import matplotlib as mpl
 
 class apex_converter:
 	"""	
@@ -108,7 +108,8 @@ class apex_converter:
 		ihtmx = min([I,nvert])
 
 		#print "debug:\n"
-		#print "lamn,lamx = %f,%f" % (lamn,lamx)
+	
+		print("lamn,lamx = %f,%f" % (lamn,lamx))
 		#print "lomn,lomx = %f,%f" % (lomn,lomx)
 		#print "ihtmn,ihtmx = %f,%f" % (ihtmn,ihtmx)
 
@@ -123,12 +124,11 @@ class apex_converter:
 		# tables for Apex coordinates, Modified Apex Coordinates and
 		# Quasi-Dipole coordinates
 		# LMK - nvert = 40 was setting used in Tomoko Matsuo's get_apexB_mod.f fortran code, which was used for conjunction analysis
-		print "Initializing lat,lon,alt grid with following parameters:\n"
-		print "Epoch, Nvert = %f, %f\n" % (epoch,nvert)
-		(epoch,nvert)
-		print "Lat min,max,npts = %f,%f,%f\n" % (glatmin,glatmax,self.nlat)
-		print "Lon min,max,npts = %f,%f,%f\n" % (glonmin,glonmax,self.nlon)
-		print "Alt min,max,npts = %f,%f,%f\n" % (altmin,altmax,self.nalt)
+		print("Initializing lat,lon,alt grid with following parameters:\n")
+		print("Epoch, Nvert = %f, %f\n" % (epoch,nvert))
+		print("Lat min,max,npts = %f,%f,%f\n" % (glatmin,glatmax,self.nlat))
+		print("Lon min,max,npts = %f,%f,%f\n" % (glonmin,glonmax,self.nlon))
+		print("Alt min,max,npts = %f,%f,%f\n" % (altmin,altmax,self.nalt))
 		
 		(gplat,gplon,gpalt) = apex.ggrid(nvert=nvert,
 										 glamn=glatmin, glamx=glatmax,
@@ -140,7 +140,7 @@ class apex_converter:
 		self.grid['lon'] = gplon
 		self.grid['alt'] = gpalt
 
-		print "Preparing interpolation tables..."
+		print("Preparing interpolation tables...")
 		# Create interpolation tables for a single time
 		ist = apex.apxmka(msgun=6, #msgun is message unit?
 						  epoch=epoch,
@@ -278,7 +278,7 @@ class apex_converter:
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
 		
-		print "Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) )
+		print("Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) ))
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
 		second = utseconds - hour*3600. - minute*60.
@@ -303,7 +303,7 @@ class apex_converter:
 		else:
 			raise ValueError("Length of time arguments must either be 1 or equal to length of longitude argument!\nyear.size=%d\ndayofyear.size=%d\nutseconds.size=%d" % (year.size,dayofyear.size,utseconds.size))
 		alon = numpy.zeros_like(mlt)
-		for k in xrange(len(mlt)):
+		for k in range(len(mlt)):
 			#Call signitude subroutine mlt2alon(xmlt,sbsllat,sbsllon,clatp,polon,alonx)
 			alon[k] = apex.mlt2alon(mlt[k],sbsllat[k],sbsllon[k],clatp,polon)
 		#Sanity check magnetic local time
@@ -358,7 +358,7 @@ class apex_converter:
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
 		
-		print "Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) )
+		print("Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) ))
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
 		second = utseconds - hour*3600. - minute*60.
@@ -474,7 +474,7 @@ class apex_converter:
 		# C   to the calling routine (where DUM1,DUM2,DUM3 are unneeded dummy variables).
 		# C
 		mlt = numpy.zeros_like(alon)
-		for k in xrange(len(alon)):
+		for k in range(len(alon)):
 			mlt[k] = apex.magloctm(alon[k],sbsllat[k],sbsllon[k],clatp,polon)
 		#Sanity check magnetic local time
 		mlt[mlt<0] = mlt[mlt<0]+24
@@ -569,9 +569,9 @@ class apex_converter:
 			f1 = numpy.zeros([npts,2])
 			f2 = numpy.zeros([npts,2])
 			
-			print "Transforming %d points from lat,lon,alt to apex..." % (npts)
+			print("Transforming %d points from lat,lon,alt to apex..." % (npts))
 
-			for i in xrange(npts):
+			for i in range(npts):
 				if ist[i] == 0: #Return status == success
 					#print('glat=%.2f,glon=%.2f,alt=%.2f' % (
 					#			lat[i],lon[i],alt[i]))
@@ -607,7 +607,7 @@ class apex_converter:
 			for name in varnames: 
 				self.lastrun[name] = eval(name)
 		else:
-			print "Inputs identical to last run, results already in attribute lastrun\n"
+			print("Inputs identical to last run, results already in attribute lastrun\n")
 			
 
 	def geo2apex(self,lat,lon,alt,hr=110.):

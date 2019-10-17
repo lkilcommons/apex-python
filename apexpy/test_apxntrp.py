@@ -241,10 +241,10 @@ class FosterTest(unittest.TestCase):
                                           wk=workArray,
                                           lwk=len(workArray))
 
-        print gdlat, gdlon
-        print 'lat:',gplat.min(), gplat.max()
-        print 'lon:',gplon.min(), gplon.max()
-        print 'alt:',gpalt.min(), gpalt.max()
+        print(gdlat, gdlon)
+        print('lat:',gplat.min(), gplat.max())
+        print('lon:',gplon.min(), gplon.max())
+        print('alt:',gpalt.min(), gpalt.max())
 
 def main():
   #Added by LMK
