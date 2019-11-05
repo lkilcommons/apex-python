@@ -47,7 +47,7 @@ alat,alon,qdlat = ac.geo2apex(lats,lons,alts)
 
 See apex_converter_demo Jupyter notebook for more usage. Also see documentation.
 
-Some later example in the notebook require [geospacepy-lite](https://bitbucket.org/amienext/geospacepy-lite) for special plot types
+Some later example in the notebook require [geospacepy-lite](https://github.com/lkilcommons/geospacepy-lite) for special plot types
 
 ## References
 - Richmond, A. D., Ionospheric Electrodynamics Using Magnetic Apex Coordinates, J. Geomag. Geoelectr., 47, 191-212, 1995.
