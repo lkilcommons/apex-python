@@ -4,7 +4,7 @@
 This code is a python wrapper around Art Richmond's original Modified Magnetic Apex magnetic coordinate system, as implemented in legacy Fortran. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models).
 
 ## Who should use this?
-If you don't have a specific reason to use this use [Apexpy](http://github.com/aburrell/apexpy) instead 
+       If you don't have a specific reason to use this use [Apexpy](http://github.com/aburrell/apexpy) instead 
 
 This is an older implementation of Apex in Fortran code, the ApexPython wrapper is older and less maintained, and Apexpy can do almost everything this library can do.
 
