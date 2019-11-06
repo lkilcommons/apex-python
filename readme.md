@@ -59,7 +59,7 @@ Some later example in the notebook require [geospacepy-lite](https://github.com/
 - VanZandt, T.E., W.L.Clark, and J.M.Warnock, Magnetic Apex Coordinates: A magnetic coordinate system for the ionospheric F2 layer, J Geophys. Res., 77, 2406-2411, 1972.
 
 ## Acknowledgements
-- Liam Kilcommons (University of Colorado, Aerospace Engineering Sciences), took over this project and extended Peter Schmitt's port with the apex-converter class (apexpy.apex_converter)
+- Liam Kilcommons (University of Colorado, Aerospace Engineering Sciences), took over this project and extended Peter Schmitt's port with the apex-converter class
        
 The following people have helped review and update this project:
 - Roy Barnes
