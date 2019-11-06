@@ -1,7 +1,7 @@
 # ApexPython
 
 ## Note
-[Apexpy](http://github.com/aburrell/apexpy) is a better mainted, better documented and more user friendly Modified Apex Coordinates implementation for Python. If you don't specifically need this package as a depenancy, use Apexpy instead.
+**[Apexpy](http://github.com/aburrell/apexpy) is a better mainted, better documented and more user friendly Modified Apex Coordinates implementation for Python. If you don't specifically need this package as a depenancy, use Apexpy instead.**
 
 ## What is this?
 This code is a python wrapper around Art Richmond's original Modified Magnetic Apex magnetic coordinate system, as implemented in legacy Fortran. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models).
