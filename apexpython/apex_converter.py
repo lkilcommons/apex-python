@@ -5,21 +5,21 @@ import os.path
 import datetime
 
 # custom
-from apexpy import apex
+from apexpython import apex
 
 # 3rd-party
 import numpy
 #import matplotlib.pyplot as pp
 #import matplotlib as mpl
 
-class apex_converter:
-	"""	
+class apex_converter(object):
+	"""
 	Bulk conversion of geographic coordinates to Modified Apex
 
 	Parameters described are for class constructor
 
 	Parameters
-	----------	
+	----------
 	glatmin : float, optional
 		Grid boundary: minimum geographic latitude (default=-90.)
 	glatmax : float, optional
@@ -36,13 +36,13 @@ class apex_converter:
 		Grid spacing factor. Determines vertical and lat,lon resolution.
 		Recommended values are between 30 and 100. (default=50.)
 	epoch : float, optional
-		Epoch for input into IGRF; the year 
-	
+		Epoch for input into IGRF; the year
+
 	Notes
-	-----	
+	-----
 		* Altitude is in km
 		* Latitude and longitude are in degrees. Negative longitude instead of lon>180.
-		* nvert is the grid spacing factor. Recommended values are between 30 and 100. 
+		* nvert is the grid spacing factor. Recommended values are between 30 and 100.
 		* Larger values of nvert will cause the program to use more memory
 		* Unterpolation accuracy will increase up to about nvert of 100. See ggrid.f for more information.
 	"""
@@ -50,9 +50,9 @@ class apex_converter:
 		nvert=50.,epoch=2010.0):
 		#Much of the following code is ripped out of test_apxntrp, written by Peter Schmidt at NCAR HAO
 
-		# due to a shortcoming in f2py (documented here http://cens.ioc.ee/pipermail/f2py-users/2008-December/001764.html), 
-		# we must know dimensions apriori.   
-		
+		# due to a shortcoming in f2py (documented here http://cens.ioc.ee/pipermail/f2py-users/2008-December/001764.html),
+		# we must know dimensions apriori.
+
 		#Code to figure out what nlat, nlon and nalt are from the nvert spacing factor. Translated from fortran code below:
 		#Code from ggrid.f:
 		#DNV  = DBLE (NVERT)
@@ -78,7 +78,7 @@ class apex_converter:
 		#NLON = LOMX - LOMN + 1
 		#NLON = MIN0 (NLON,5*NVERT+1)
 		#NALT = IHTMX - IHTMN + 1
-		
+
 		#Set local variables to their attribute counterparts
 		self.glatmin = glatmin
 		self.glatmax = glatmax
@@ -99,12 +99,12 @@ class apex_converter:
 		lomn = max([(glonmin+180.)/dlon,0])
 		glomxl = min([glonmax,glonmin+360.])
 		lomx = min([(glonmax+180.)/dlon+1.,10*nvert])
-		
+
 		x1 = re/(re+altmax)/diht - 1.0e-5
 		ihtmn = max([x1,1.])
 		ihtmn = min([ihtmn,nvert-1.])
 		x2 = re/(re+altmin)/diht + 1.0e-5
-		I = x2 + 1.	 
+		I = x2 + 1.
 		ihtmx = min([I,nvert])
 
 		#print "debug:\n"
@@ -129,7 +129,7 @@ class apex_converter:
 		print "Lat min,max,npts = %f,%f,%f\n" % (glatmin,glatmax,self.nlat)
 		print "Lon min,max,npts = %f,%f,%f\n" % (glonmin,glonmax,self.nlon)
 		print "Alt min,max,npts = %f,%f,%f\n" % (altmin,altmax,self.nalt)
-		
+
 		(gplat,gplon,gpalt) = apex.ggrid(nvert=nvert,
 										 glamn=glatmin, glamx=glatmax,
 										 glomn=glonmin,   glomx=glonmax,
@@ -146,7 +146,7 @@ class apex_converter:
 						  epoch=epoch,
 						  gplat=gplat, gplon=gplon, gpalt=gpalt,
 						  wk=self.workArray,
-						  nlat=self.nlat,   nlon=self.nlon,   nalt=self.nalt) 
+						  nlat=self.nlat,   nlon=self.nlon,   nalt=self.nalt)
 		if ist != 0:
 			raise RuntimeError('Unable to make the interpolation tables: Return code was %d' % (ist))
 
@@ -155,30 +155,30 @@ class apex_converter:
 		Test if the self.lastrun represents the results obtained by transforming inputs time,lat,lon,alt,hr
 		"""
 		retval = False
-		if hasattr(self,'lastrun'): #Check for lastrun attribute existance 
+		if hasattr(self,'lastrun'): #Check for lastrun attribute existance
 			if all(inputval in self.lastrun for inputval in ['lat','lon','alt','hr']): #Check for valid lastrun dictionary keys
 				if len(lat) == len(self.lastrun['lat']): #Check for equal size
 					equality_checks = [numpy.array_equal(lat,self.lastrun['lat']),
-									   numpy.array_equal(lon,self.lastrun['lon']), 
+									   numpy.array_equal(lon,self.lastrun['lon']),
 									   numpy.array_equal(alt,self.lastrun['alt']),
 									   hr  == self.lastrun['hr']]
-					if all(equality_checks): 
+					if all(equality_checks):
 						#Check for equal values
 						retval = True
 		return retval
 
 	def solarParams(self,year,dayofyear,utseconds):
 		"""
-		Gets the geographic latitude and longitude of the 
+		Gets the geographic latitude and longitude of the
 		northern geomagnetic pole and the subsolar point(s)
 		for a particular year and day of year.
 
 		Note that the geomagnetic north pole coordinate returned
 		are determined by the epoch setting of this apex_converter
 		instance and not explicitly by the year/day-of-year argument.
-		If you are not using a year/day-of-year that agrees 
+		If you are not using a year/day-of-year that agrees
 		with the epoch setting (self.epoch), you'll get incorrect
-		results. 
+		results.
 
 		Parameters
 		----------
@@ -189,7 +189,7 @@ class apex_converter:
 			utseconds : numpy.array
 				The Universal Time second of the day for which
 				to obtain the subsolar points.
-		
+
 		Returns
 		-------
 			subsllat : numpy.array len(utseconds)
@@ -226,7 +226,7 @@ class apex_converter:
 		if utseconds.size > 1:
 			for k in range(utseconds.size):
 				sbsllat[k],sbsllon[k] = apex.subsol(year,dayofyear,hour[k],minute[k],second[k])
-		else: 
+		else:
 			sbsllat,sbsllon = apex.subsol(year,dayofyear,hour,minute,second)
 
 		return sbsllat,sbsllon,nplat,nplon
@@ -235,11 +235,11 @@ class apex_converter:
 		"""
 		Converts Magnetic Local Time to Apex Longitudes
 
-		Calls apex subroutine apex.mlt2alon (mag local time) 
+		Calls apex subroutine apex.mlt2alon (mag local time)
 		after setting the IGRF coefficient global variables using
-		the same epoch as was used to initially 
-		generate the interpolation tables. 
-		
+		the same epoch as was used to initially
+		generate the interpolation tables.
+
 		Parameters
 		----------
 		mlt : numpy.array
@@ -248,10 +248,10 @@ class apex_converter:
 			The year for which to compute the MLT
 		dayofyear : int or numpy.array
 			The day-of-year(s) for which MLT is to be found
-		utseconds : int or numpy.array 
+		utseconds : int or numpy.array
 			the second-of-the-day(s) in UT
 			of the time for which the MLT is to be found
-		
+
 		Returns
 		-------
 		mlt : numpy.array
@@ -277,7 +277,7 @@ class apex_converter:
 			dayofyear = numpy.array(dayofyear)
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
-		
+
 		print "Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) )
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
@@ -286,7 +286,7 @@ class apex_converter:
 		#Set IGRF coeffcients to current epoch
 		apex.cofrm(self.epoch)
 		clatp,polon,vp = apex.dypol()
-		if year.size==1 and dayofyear.size==1 and utseconds.size==1: 
+		if year.size==1 and dayofyear.size==1 and utseconds.size==1:
 			sbsllat1,sbsllon1 = apex.subsol(year,dayofyear,hour,minute,second)
 			sbsllat = numpy.ones_like(mlt)*sbsllat1
 			sbsllon = numpy.ones_like(mlt)*sbsllon1
@@ -315,10 +315,10 @@ class apex_converter:
 		"""
 		Converts Apex Longitudes to Magnetic Local Time
 
-		Calls apex subroutine apex.magloctm (mag local time) 
+		Calls apex subroutine apex.magloctm (mag local time)
 		after setting the IGRF coefficient global variables using
-		the same epoch as was used to initially 
-		generate the interpolation tables. 
+		the same epoch as was used to initially
+		generate the interpolation tables.
 
 		Parameters
 		----------
@@ -328,10 +328,10 @@ class apex_converter:
 			The year for which to compute the MLT
 		dayofyear : int or numpy.array
 			The day-of-year(s) for which MLT is to be found
-		utseconds : int or numpy.array 
+		utseconds : int or numpy.array
 			the second-of-the-day(s) in UT
 			of the time for which the MLT is to be found
-		
+
 		Returns
 		-------
 		mlt : numpy.array
@@ -357,7 +357,7 @@ class apex_converter:
 			dayofyear = numpy.array(dayofyear)
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
-		
+
 		print "Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) )
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
@@ -418,7 +418,7 @@ class apex_converter:
 		# C            SBSLLAT = geographic latitude of subsolar point (degrees)
 		# C            SBSLLON = geographic longitude of subsolar point (degrees,
 		# C                      between -180 and +180)
-		if year.size==1 and dayofyear.size==1 and utseconds.size==1: 
+		if year.size==1 and dayofyear.size==1 and utseconds.size==1:
 			sbsllat1,sbsllon1 = apex.subsol(year,dayofyear,hour,minute,second)
 			sbsllat = numpy.ones_like(alon)*sbsllat1
 			sbsllon = numpy.ones_like(alon)*sbsllon1
@@ -452,13 +452,13 @@ class apex_converter:
 		# C   Output:
 		# C    mlt (real) = magnetic local time for the apex longitude alon (hours)
 		# C
-		# C To go from mlt to alon (see comments following Entry mlt2alon for definition 
+		# C To go from mlt to alon (see comments following Entry mlt2alon for definition
 		# C  of variables), use:
 		# C
 		# C     CALL MLT2ALON (MLT,SBSLLAT,SBSLLON,CLATP,POLON,ALON)
 		# C
-		# C  NOTE: If the calling routine uses subroutine magloctm in conjunction with 
-		# C   file magfld.f (which is used by subroutine APEX), then clatp and polon can 
+		# C  NOTE: If the calling routine uses subroutine magloctm in conjunction with
+		# C   file magfld.f (which is used by subroutine APEX), then clatp and polon can
 		# C   be found by invoking
 		# C
 		# C     CALL DYPOL (CLATP,POLON,VP)
@@ -485,26 +485,26 @@ class apex_converter:
 		"""
 		Converts a set of points to Apex, also saves the results from APXMALL
 		into a class parameter so they can be reused.
-		
+
 		Parameters
 		----------
 		lat : numpy.array
 			Geographic latitude in degrees with N positive (length n)
-		lon : numpy.array 
+		lon : numpy.array
 			Geographic longitude in degress with E positive (length n)
-		alt : numpy.array 
+		alt : numpy.array
 			Altitude of measurement in km (length n)
-		hr  : float 
+		hr  : float
 			Modified Apex reference altitude in km (see Richmond,1995 for description of coordinates)
-	
+
 		Returns
 		-------
 
 		Notes
 		-----
-			Saves the following variables to the dictionary self.lastrun. 
+			Saves the following variables to the dictionary self.lastrun.
 			All values are numpy arrays of dimensions [n,1], [n,2] or [n,3].
-			
+
 			* b - magnetic field components (east, north, up), in nT
 			* bhat - components (east, north, up) of unit vector along the geomagnetic field direction
 			* bmag - magnetic field magnitude, nT
@@ -527,7 +527,7 @@ class apex_converter:
 		lon[lon>180.] = lon[lon>180.]-360.
 		lon[lon<-180.] = lon[lon<-180.]+360.
 		#if hr < self.altmin or hr > self.altmax:
-		#	raise ValueError('Reference height %f is not within altitude limits (%f-%f)!' % (hr,self.altmin,self.altmax)) 
+		#	raise ValueError('Reference height %f is not within altitude limits (%f-%f)!' % (hr,self.altmin,self.altmax))
 		if not self.identicalInputs(lat,lon,alt,hr):
 			npts = len(lat)
 			#Init outputs
@@ -568,7 +568,7 @@ class apex_converter:
 									numpy.zeros([npts,3]),numpy.zeros([npts,3])
 			f1 = numpy.zeros([npts,2])
 			f2 = numpy.zeros([npts,2])
-			
+
 			print "Transforming %d points from lat,lon,alt to apex..." % (npts)
 
 			for i in xrange(npts):
@@ -581,34 +581,33 @@ class apex_converter:
 														alt=alt[i],
 														hr=hr,
 														wk=self.workArray)
-				else: 
+				else:
 					raise RuntimeError('Call to APXMALL failed at point #%d for unknown reasons (Fortran code does not introspect)' % i)
-			
+
 			varnames = ['lat','lon','alt','hr','b','bhat','bmag',
 			 'si','alon','xlatm','vmp','wm','d','be3','sim',
 			 'd1','d2','d3','e1','e2','e3',
 			 'xlatqd','f','f1','f2','ist']
 
-			#Make a dictionary of the output from this run and store it in lastrun, 
-			#that way, we can avoid re-running when inputs are identical  
+			#Make a dictionary of the output from this run and store it in lastrun,
+			#that way, we can avoid re-running when inputs are identical
 			self.lastrun = dict()
-			for name in varnames: 
+			for name in varnames:
 				self.lastrun[name] = eval(name)
 		else:
 			print "Inputs identical to last run, results already in attribute lastrun\n"
-			
 
 	def geo2apex(self,lat,lon,alt,hr=110.):
 		"""
 		Does a simple transformation of observation positions from geographic to apex
-		
+
 		Parameters
 		----------
-		lat : numpy.array 
+		lat : numpy.array
 			Observation Geographic latitudes
-		lon : numpy.array 
+		lon : numpy.array
 			Observation Geographic longitudes
-		alt : numpy.array 
+		alt : numpy.array
 			Observation Altitudes in km
 		hr=110. : float
 			Modified Apex reference height in km
@@ -627,20 +626,20 @@ class apex_converter:
 		alat = self.lastrun['xlatm']
 		alon = self.lastrun['alon']
 		qdlat = self.lastrun['xlatqd']
-		
+
 		return alat,alon,qdlat
 
 	def apex2geo(self,alat,alon,alt,hr=110.):
 		"""
 		Does a simple transformation of observation positions from modified apex to geodetic
-		
+
 		Parameters
 		----------
-		alat : numpy.array 
+		alat : numpy.array
 			Modified Apex latitudes
-		alon : numpy.array 
+		alon : numpy.array
 			Modified Apex longitudes
-		alt : numpy.array 
+		alt : numpy.array
 			Altitude to get coordinates for in km
 		hr=110. : float
 			Modified Apex reference height in km
@@ -676,20 +675,20 @@ class apex_converter:
 		#import pdb
 		"""
 		Converts a vector measurement and it's associated location to modified apex coordinates
-		
+
 		Transforms measurement vector v [m x 3] in geo east, north, up
-		to apex. Lat, lon, and alt are [m x 1] vectors of locations association with 
+		to apex. Lat, lon, and alt are [m x 1] vectors of locations association with
 		Measurements in vector v, hr is reference height
-		
+
 		Parameters
 		----------
-		lat : numpy.array 
+		lat : numpy.array
 			geographic latitude
 		lon : numpy.array
 			geographic longitude
 		alt : numpy.array
 			geographic altitude
-		v : numpy.array 
+		v : numpy.array
 			[nx3] vector to transform
 		hr : float, optional
 			Apex reference height in km (default=110.)
@@ -701,7 +700,7 @@ class apex_converter:
 		alon : numpy.array
 			Apex Longitude of measurement
 		v_d : numpy.array
-			Vector in Apex 'd' basis 
+			Vector in Apex 'd' basis
 
 		"""
 		self.getTransformationResults(lat,lon,alt,hr=hr)
@@ -712,18 +711,11 @@ class apex_converter:
 		e2 = self.lastrun['e2']
 		e3 = self.lastrun['e3']
 
-		#Make array with same dimension as lat
-		v_d1 = numpy.zeros_like(lat)
-		v_d2 = numpy.zeros_like(lat)
-		v_d3 = numpy.zeros_like(lat)
-		
-		for c in numpy.arange(len(v[:,0])):
-			v_d1[c] = numpy.dot(v[c,:],e1[c,:])
-			v_d2[c] = numpy.dot(v[c,:],e2[c,:])
-			v_d3[c] = numpy.dot(v[c,:],e3[c,:])
+		v_d1 = v[:,0]*e1[:,0]+v[:,1]*e1[:,1]+v[:,2]*e1[:,2]
+		v_d2 = v[:,0]*e2[:,0]+v[:,1]*e2[:,1]+v[:,2]*e2[:,2]
+		v_d3 = v[:,0]*e3[:,0]+v[:,1]*e3[:,1]+v[:,2]*e3[:,2]
 
 		v_d = numpy.column_stack((v_d1,v_d2,v_d3))
 		#pdb.set_trace()
 		return alat,alon,v_d
 
-		
