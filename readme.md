@@ -1,7 +1,12 @@
-# Apexpy
+# ApexPython
+
+## Note
+[Apexpy](http://github.com/aburrell/apexpy) is a better mainted, better documented and more user friendly Modified Apex Coordinates implementation for Python. If you don't specifically need this package as a depenancy, use Apexpy instead.
 
 ## What is this?
-This code is a python wrapper around Art Richmond's original Modified Magnetic Apex magnetic coordinate system, as implemented in legacy Fortran. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models). 
+This code is a python wrapper around Art Richmond's original Modified Magnetic Apex magnetic coordinate system, as implemented in legacy Fortran. This is the same Fortran code that is available from the [CEDAR Database](https://cedarweb.vsp.ucar.edu/wiki/index.php/Tools_and_Models:Empirical_Models).
+
+## Contents of this package
 
 I've written a Python class called apex_converter, which expands upon the basic functionality in the Fortran library in several ways:
 
@@ -33,11 +38,11 @@ python setup.py install
 
 ```{python}
 # Import
-import apexpy
+from apexpython.apex_converter import apex_converter
 # Instantiate the class
 # Epoch is the time frame for which you want to transform data
 # altmin and altmax are the minimum and maximum valid altitudes for geographic locations
-ac = apexpy.apex_converter(epoch=2010.5,altmin=300.,altmax=900.)
+ac = apex_converter(epoch=2010.5,altmin=300.,altmax=900.)
 # Transform some data
 lats = np.ones((10,))*80.
 lons = np.linspace(-180.,180.,10)
@@ -47,14 +52,14 @@ alat,alon,qdlat = ac.geo2apex(lats,lons,alts)
 
 See apex_converter_demo Jupyter notebook for more usage. Also see documentation.
 
-Some later example in the notebook require [geospacepy-lite](https://bitbucket.org/amienext/geospacepy-lite) for special plot types
+Some later example in the notebook require [geospacepy-lite](https://github.com/lkilcommons/geospacepy-lite) for special plot types
 
 ## References
 - Richmond, A. D., Ionospheric Electrodynamics Using Magnetic Apex Coordinates, J. Geomag. Geoelectr., 47, 191-212, 1995.
 - VanZandt, T.E., W.L.Clark, and J.M.Warnock, Magnetic Apex Coordinates: A magnetic coordinate system for the ionospheric F2 layer, J Geophys. Res., 77, 2406-2411, 1972.
 
 ## Acknowledgements
-- Liam Kilcommons (University of Colorado, Aerospace Engineering Sciences), took over this project and extended Peter Schmitt's port with the apex-converter class (apexpy.apex_converter)
+- Liam Kilcommons (University of Colorado, Aerospace Engineering Sciences), took over this project and extended Peter Schmitt's port with the apex-converter class
        
 The following people have helped review and update this project:
 - Roy Barnes

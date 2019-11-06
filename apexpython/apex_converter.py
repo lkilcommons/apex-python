@@ -10,7 +10,7 @@ from apexpython import apex
 # 3rd-party
 import numpy
 #import matplotlib.pyplot as pp
-#import matplotlib as mpl
+import matplotlib as mpl
 
 class apex_converter(object):
 	"""
@@ -108,7 +108,8 @@ class apex_converter(object):
 		ihtmx = min([I,nvert])
 
 		#print "debug:\n"
-		#print "lamn,lamx = %f,%f" % (lamn,lamx)
+	
+		print("lamn,lamx = %f,%f" % (lamn,lamx))
 		#print "lomn,lomx = %f,%f" % (lomn,lomx)
 		#print "ihtmn,ihtmx = %f,%f" % (ihtmn,ihtmx)
 
@@ -123,13 +124,11 @@ class apex_converter(object):
 		# tables for Apex coordinates, Modified Apex Coordinates and
 		# Quasi-Dipole coordinates
 		# LMK - nvert = 40 was setting used in Tomoko Matsuo's get_apexB_mod.f fortran code, which was used for conjunction analysis
-		print "Initializing lat,lon,alt grid with following parameters:\n"
-		print "Epoch, Nvert = %f, %f\n" % (epoch,nvert)
-		(epoch,nvert)
-		print "Lat min,max,npts = %f,%f,%f\n" % (glatmin,glatmax,self.nlat)
-		print "Lon min,max,npts = %f,%f,%f\n" % (glonmin,glonmax,self.nlon)
-		print "Alt min,max,npts = %f,%f,%f\n" % (altmin,altmax,self.nalt)
-
+		print("Initializing lat,lon,alt grid with following parameters:\n")
+		print("Epoch, Nvert = %f, %f\n" % (epoch,nvert))
+		print("Lat min,max,npts = %f,%f,%f\n" % (glatmin,glatmax,self.nlat))
+		print("Lon min,max,npts = %f,%f,%f\n" % (glonmin,glonmax,self.nlon))
+		print("Alt min,max,npts = %f,%f,%f\n" % (altmin,altmax,self.nalt))
 		(gplat,gplon,gpalt) = apex.ggrid(nvert=nvert,
 										 glamn=glatmin, glamx=glatmax,
 										 glomn=glonmin,   glomx=glonmax,
@@ -140,7 +139,7 @@ class apex_converter(object):
 		self.grid['lon'] = gplon
 		self.grid['alt'] = gpalt
 
-		print "Preparing interpolation tables..."
+		print("Preparing interpolation tables...")
 		# Create interpolation tables for a single time
 		ist = apex.apxmka(msgun=6, #msgun is message unit?
 						  epoch=epoch,
@@ -277,8 +276,7 @@ class apex_converter(object):
 			dayofyear = numpy.array(dayofyear)
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
-
-		print "Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) )
+		print("Computing %d Magnetic Local Time values to Apex Longitude...\n" % ( len(mlt) ))
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
 		second = utseconds - hour*3600. - minute*60.
@@ -303,7 +301,7 @@ class apex_converter(object):
 		else:
 			raise ValueError("Length of time arguments must either be 1 or equal to length of longitude argument!\nyear.size=%d\ndayofyear.size=%d\nutseconds.size=%d" % (year.size,dayofyear.size,utseconds.size))
 		alon = numpy.zeros_like(mlt)
-		for k in xrange(len(mlt)):
+		for k in range(len(mlt)):
 			#Call signitude subroutine mlt2alon(xmlt,sbsllat,sbsllon,clatp,polon,alonx)
 			alon[k] = apex.mlt2alon(mlt[k],sbsllat[k],sbsllon[k],clatp,polon)
 		#Sanity check magnetic local time
@@ -357,8 +355,7 @@ class apex_converter(object):
 			dayofyear = numpy.array(dayofyear)
 		if not isinstance(utseconds,numpy.ndarray):
 			utseconds = numpy.array(utseconds)
-
-		print "Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) )
+		print("Computing %d Apex Longitude values to Magnetic Local Time...\n" % ( len(alon) ))
 		hour = numpy.floor(utseconds/3600)
 		minute = numpy.floor((utseconds - hour*3600)/60)
 		second = utseconds - hour*3600. - minute*60.
@@ -474,7 +471,7 @@ class apex_converter(object):
 		# C   to the calling routine (where DUM1,DUM2,DUM3 are unneeded dummy variables).
 		# C
 		mlt = numpy.zeros_like(alon)
-		for k in xrange(len(alon)):
+		for k in range(len(alon)):
 			mlt[k] = apex.magloctm(alon[k],sbsllat[k],sbsllon[k],clatp,polon)
 		#Sanity check magnetic local time
 		mlt[mlt<0] = mlt[mlt<0]+24
@@ -568,20 +565,31 @@ class apex_converter(object):
 									numpy.zeros([npts,3]),numpy.zeros([npts,3])
 			f1 = numpy.zeros([npts,2])
 			f2 = numpy.zeros([npts,2])
+			print("Transforming %d points from lat,lon,alt to apex..." % (npts))
 
-			print "Transforming %d points from lat,lon,alt to apex..." % (npts)
-
-			for i in xrange(npts):
+			for i in range(npts):
 				if ist[i] == 0: #Return status == success
-					(b[i,:],bhat[i,:],bmag[i],
-					 si[i],alon[i],xlatm[i],vmp[i],wm[i],d[i],be3[i],sim[i],
-					 d1[i,:],d2[i,:],d3[i,:],e1[i,:],e2[i,:],e3[i,:],
-					 xlatqd[i],f[i],f1[i,:],f2[i,:],ist[i]) = apex.apxmall(glat=lat[i],
-														glon=lon[i],
-														alt=alt[i],
-														hr=hr,
-														wk=self.workArray)
-				else:
+					#print('glat=%.2f,glon=%.2f,alt=%.2f' % (
+					#			lat[i],lon[i],alt[i]))
+
+					if numpy.abs(lat[i])>20.:
+						(b[i,:],bhat[i,:],bmag[i],
+						 si[i],alon[i],xlatm[i],vmp[i],wm[i],d[i],be3[i],sim[i],
+						 d1[i,:],d2[i,:],d3[i,:],e1[i,:],e2[i,:],e3[i,:],
+						 xlatqd[i],f[i],f1[i,:],f2[i,:],ist[i]) = apex.apxmall(glat=lat[i],
+															glon=lon[i],
+															alt=alt[i],
+															hr=hr,
+															wk=self.workArray)
+					else:
+						(b[i,:],bhat[i,:],bmag[i],
+						 si[i],alon[i],xlatm[i],
+						 vmp[i],wm[i],d[i],be3[i],sim[i],
+						 d1[i,:],d2[i,:],d3[i,:],
+						 e1[i,:],e2[i,:],e3[i,:],
+						 xlatqd[i],f[i],f1[i,:],f2[i,:],
+						 ist[i]) = (numpy.nan for i in range(22))
+				else: 
 					raise RuntimeError('Call to APXMALL failed at point #%d for unknown reasons (Fortran code does not introspect)' % i)
 
 			varnames = ['lat','lon','alt','hr','b','bhat','bmag',
@@ -595,7 +603,8 @@ class apex_converter(object):
 			for name in varnames:
 				self.lastrun[name] = eval(name)
 		else:
-			print "Inputs identical to last run, results already in attribute lastrun\n"
+			print("Inputs identical to last run, results already in attribute lastrun\n")
+			
 
 	def geo2apex(self,lat,lon,alt,hr=110.):
 		"""
@@ -631,8 +640,8 @@ class apex_converter(object):
 
 	def apex2geo(self,alat,alon,alt,hr=110.):
 		"""
-		Does a simple transformation of observation positions from modified apex to geodetic
-
+		Does a simple transformation of observation positions from modified apex to geocentric
+		
 		Parameters
 		----------
 		alat : numpy.array
@@ -646,12 +655,15 @@ class apex_converter(object):
 
 		Returns
 		-------
-		gdlat : numpy.array
-			Geodetic Latitude
-		gdlon : numpy.array
-			Geodetic Longitude
+		glat : numpy.array
+			Geocentric Latitude
+			NOTE: it is not entirely clear if this is geodetic or geocentric in the legacy Fortran
+			The external function (apxm2g) says geodetic, but the internal (apexm2g_legacy) says geocentric. 
+			I tend to belive the internal function, especially because geocentric is so much easier to deal with.
+		glon : numpy.array
+			Geocentric Longitude
 		"""
-		gdlats,gdlons = numpy.zeros_like(alat),numpy.zeros_like(alon)
+		glats,glons = numpy.zeros_like(alat),numpy.zeros_like(alon)
 		try:
 			n_alts = len(alt)
 		except:
@@ -661,15 +673,20 @@ class apex_converter(object):
 			alt = numpy.ones_like(alat)*alt
 
 		for i in range(len(alat)):
-			(this_gdlat, this_gdlon, this_ist) = apex.apxm2g(xlatm=alat[i],
+			(this_glat, this_glon, this_ist) = apex.apxm2g(xlatm=alat[i],
 	                                          alon=alon[i],
 	                                          alt=alt[i],
 	                                          hr=hr,
 	                                          wk=self.workArray,
 	                                          lwk=len(self.workArray))
-			gdlats[i],gdlons[i] = this_gdlat,this_gdlon
+			if this_ist == -1:
+				print('Warning! Modified Apex to Geo Conversion Low Precision for alat=%f,alon=%f,alt=%f.' % (alat[i],alon[i],alt[i]))
+			elif this_ist > 0:
+				raise RuntimeError('Modified Apex to Geo Conversion failed for alat=%f,alon=%f,alt=%f.' % (alat[i],alon[i],alt[i]))
 
-		return gdlats,gdlons
+			glats[i],glons[i] = this_glat,this_glon
+
+		return glats,glons
 
 	def measurement2apex(self,lat,lon,alt,v,hr=110.):
 		#import pdb
@@ -718,4 +735,3 @@ class apex_converter(object):
 		v_d = numpy.column_stack((v_d1,v_d2,v_d3))
 		#pdb.set_trace()
 		return alat,alon,v_d
-
