@@ -38,11 +38,11 @@ python setup.py install
 
 ```{python}
 # Import
-import apexpy
+from apexpython.apex_converter import apex_converter
 # Instantiate the class
 # Epoch is the time frame for which you want to transform data
 # altmin and altmax are the minimum and maximum valid altitudes for geographic locations
-ac = apexpy.apex_converter(epoch=2010.5,altmin=300.,altmax=900.)
+ac = apex_converter(epoch=2010.5,altmin=300.,altmax=900.)
 # Transform some data
 lats = np.ones((10,))*80.
 lons = np.linspace(-180.,180.,10)
