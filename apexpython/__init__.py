@@ -1,4 +1,4 @@
 try:
     import apex_converter
-except ModuleNotFoundError:
+except ImportError:
     from . import apex_converter
